@@ -10,7 +10,7 @@ export function UserFetcher() {
   const getApi = async () => {
     try {
       const result = await getApiCall("/user/profile");
-      setUser(result);
+      setUser(result.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
     }

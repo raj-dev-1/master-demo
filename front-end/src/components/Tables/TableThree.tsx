@@ -40,12 +40,11 @@ const TableThree = () => {
       let result: any;
       if (user.profile.user == "student") {
         result = await getApiCall("/user/leaveStatus");
-        setData(result);
+        setData(result.data);
       } else {
         result = await getApiCall("/manage/userLeaveStatus");
-        setData(result);
+        setData(result.data);
       }
-      setData(result);
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -160,9 +159,6 @@ const TableThree = () => {
                 </a>
               </div>
             </th>
-            <th scope="col" className="px-6 py-3">
-              <span className="sr-only">Edit</span>
-            </th>
           </tr>
         </thead>
         <tbody>
@@ -198,14 +194,7 @@ const TableThree = () => {
                     {item.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-right">
-                  <a
-                    href="#"
-                    className="font-medium text-blue-600 hover:underline dark:text-blue-500"
-                  >
-                    Edit
-                  </a>
-                </td>
+                
               </tr>
             ))
           ) : (

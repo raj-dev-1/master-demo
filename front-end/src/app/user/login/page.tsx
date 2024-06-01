@@ -9,6 +9,7 @@ import { LoginFormValues } from "@/types/form";
 import { postApiCall } from "@/utils/apicall";
 import { useRouter } from "next/navigation";
 import { useUserContext } from "@/context/UserContext";
+import { toast } from "react-toastify";
 
 const page = () => {
   // const [userData, setUserData] = useState<any>({
@@ -42,12 +43,15 @@ const page = () => {
       // Reset the form values
       console.log(values);
       const result = await postApiCall("/user/login", values);
-      
-      if (result) {
+      console.log(result);
+      if (result?.status == 200) {
         const expirationDate = new Date();
         expirationDate.setTime(expirationDate.getTime() + (1 * 60 * 60 * 1000)); // 1 hours in milliseconds
         Cookies.set('jwt', result.token, { expires: expirationDate }); 
+        toast.success("Login successful");
         router.push('/'); // Redirect to home page
+      } else {
+        toast.error("Login failed");
       }
       resetForm();
     },

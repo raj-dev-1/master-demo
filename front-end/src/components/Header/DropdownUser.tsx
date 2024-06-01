@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Cookies from 'js-cookie';
 import { useUserContext } from "@/context/UserContext";
+import { getApiCall } from "@/utils/apicall";
+import { toast } from "react-toastify";
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -38,14 +40,21 @@ const DropdownUser = () => {
     document.addEventListener("keydown", keyHandler);
     return () => document.removeEventListener("keydown", keyHandler);
   },[dropdownOpen]);
+
   const handleLogout = async () => {
     try {
-        Cookies.remove('jwt');
-        router.push("/user/login");
+       const result = await getApiCall('/user/logout');
+       if(result.status == 200){
+         toast.success("Logout successful");
+         router.push('/user/login');
+        } else {
+          toast.error("Logout not successful");
+       }
     } catch (error) {
       console.error("Logout error", error);
     }
   };
+  
   return (
     <div className="relative">
       <Link

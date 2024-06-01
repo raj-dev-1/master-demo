@@ -7,6 +7,8 @@ import React, { useEffect, useState } from "react";
 import Loader from "@/components/common/Loader";
 import { UserContextProvider } from "@/context/UserContext";
 import { UserFetcher } from "@/components/UserFetcher/UserFetcher";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function RootLayout({
   children,
@@ -25,13 +27,24 @@ export default function RootLayout({
   return (
     <UserContextProvider>
       <UserFetcher />
-    <html lang="en">
-      <body suppressHydrationWarning={true}>
-        <div className="dark:bg-boxdark-2 dark:text-bodydark">
-          { loading ? <Loader /> : children }
-        </div>
-      </body>
-    </html>
+      <html lang="en">
+        <body suppressHydrationWarning={true}>
+          <div className="dark:bg-boxdark-2 dark:text-bodydark">
+            {loading ? <Loader /> : children}
+          </div>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+        </body>
+      </html>
     </UserContextProvider>
   );
 }

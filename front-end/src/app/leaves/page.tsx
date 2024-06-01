@@ -45,7 +45,8 @@ const Leaves: React.FC = () => {
       if (user.profile.user == "student") {
         const leaveBalanceResult: ApiResponse =
           await getApiCall("/user/leaveBalance");
-        setLeaveBalance(leaveBalanceResult.leaveBalance);
+          console.log(leaveBalanceResult.data);
+        setLeaveBalance(leaveBalanceResult.data.leaveBalance);
       }
       // Fetch leave balance data
     } catch (error) {
@@ -58,7 +59,6 @@ const Leaves: React.FC = () => {
       getApi();
     }
   }, [user]);
-
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-full">

@@ -115,10 +115,10 @@ const Calendar = () => {
       let result: any;
       if (user.profile.user == "student") {
         result = await getApiCall("/user/leaveStatus");
-        setLeaveData(result.leaveStatus);
+        setLeaveData(result.data.leaveStatus);
       } else {
         result = await getApiCall("/manage/userLeaveStatus");
-        setLeaveData(result.leaveStatus);
+        setLeaveData(result.data.leaveStatus);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
