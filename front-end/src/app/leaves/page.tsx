@@ -23,11 +23,6 @@ interface LeaveBalanceData {
   attendancePercentage: string;
 }
 
-interface ApiResponse {
-  leaveBalance: LeaveBalanceData;
-  message: string;
-}
-
 const Leaves: React.FC = () => {
   const [user] = useUserContext();
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceData>({
@@ -39,15 +34,29 @@ const Leaves: React.FC = () => {
     totalWorkingDays: "",
     attendancePercentage: "",
   });
+  const [date1,setDate1] =  useState<Date | null>(null);
+  const [date2,setDate2] =  useState<Date | null>(null);
+  const [dateDifference, setDateDifference] = useState<number | null>(null);
 
+  // Helper function to calculate the difference in days
+  const calculateDateDifference = (date1: Date | null, date2: Date | null): number | null => {
+    if (!date1 || !date2) return null;
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    const diffTime = Math.abs(d2.getTime() - d1.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Difference in days
+    return diffDays;
+  };
+  
   const getApi = async () => {
     try {
-      if (user.profile.user == "student") {
-        const leaveBalanceResult: ApiResponse =
-          await getApiCall("/user/leaveBalance");
-          console.log(leaveBalanceResult.data);
-        setLeaveBalance(leaveBalanceResult.data.leaveBalance);
+      let leaveBalanceResult: any ;
+      if (user.profile.user == "student" ||user.profile.roleId == 4) {
+         leaveBalanceResult = await getApiCall("/user/leaveBalance");
+        } else {
+        leaveBalanceResult = await getApiCall("/manage/leaveBalance");
       }
+      setLeaveBalance(leaveBalanceResult.data.leaveBalance);
       // Fetch leave balance data
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -59,6 +68,9 @@ const Leaves: React.FC = () => {
       getApi();
     }
   }, [user]);
+  useEffect(() => {
+    setDateDifference(calculateDateDifference(date1, date2));
+  }, [date1, date2]);
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-full">
@@ -94,10 +106,10 @@ const Leaves: React.FC = () => {
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                     <div className="w-full sm:w-1/2">
-                      <DatePickerOne label="From" />
+                      <DatePickerOne label="From"   setdate={date1 ?? undefined}  onDateChange={setDate1} />
                     </div>
                     <div className="w-full sm:w-1/2">
-                      <DatePickerOne label="To" />
+                      <DatePickerOne label="To"   setdate={date2 ?? undefined}  onDateChange={setDate2} />
                     </div>
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
@@ -106,7 +118,7 @@ const Leaves: React.FC = () => {
                         Number of Days
                       </label>
                       <input
-                        placeholder="Default Input"
+                        value={dateDifference !== null ? `${dateDifference} days` : "Select both dates"}
                         className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                         type="text"
                       />

@@ -3,28 +3,42 @@ import flatpickr from "flatpickr";
 
 interface DatePickerOneProps {
   label: string;
-  initialDate?: string; // Optional initial date in 'YYYY-MM-DD' format
+  setdate?: Date | string; // Optional initial date in 'YYYY-MM-DD' format or Date object
+  onDateChange?: (date: Date | null) => void;
 }
 
-const DatePickerOne: React.FC<DatePickerOneProps> = ({ label, initialDate }) => {
+const DatePickerOne: React.FC<DatePickerOneProps> = ({ label, setdate, onDateChange }) => {
   const datepickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Init flatpickr
     if (datepickerRef.current) {
-      flatpickr(datepickerRef.current, {
+      const fpInstance = flatpickr(datepickerRef.current, {
         mode: "single",
         static: true,
         monthSelectorType: "static",
         dateFormat: "Y-m-d", // API date format 'YYYY-MM-DD'
         prevArrow:
-          '<svg className="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8l1.4-1.4-4-4 4-4L5.4 0 0 5.4z" /></svg>',
+          '<svg width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8l1.4-1.4-4-4 4-4L5.4 0 0 5.4z" /></svg>',
         nextArrow:
-          '<svg className="fill-current" width="7" height="11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
-        defaultDate: initialDate, // Set the initial date if provided
+          '<svg width="7" height="11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
+        defaultDate: setdate || undefined, // Set the initial date if provided, else undefined
+        onChange: (selectedDates) => {
+          if (onDateChange) {
+            const formattedDate: any = formatDate(selectedDates.length > 0 ? selectedDates[0] : null);
+            onDateChange(formattedDate);
+          }
+        }
       });
+
+      // Cleanup flatpickr instance on unmount or ref change
+      return () => {
+        if (fpInstance) {
+          fpInstance.destroy();
+        }
+      };
     }
-  }, [initialDate]);
+  }, [setdate]);
 
   return (
     <div>
@@ -55,6 +69,13 @@ const DatePickerOne: React.FC<DatePickerOneProps> = ({ label, initialDate }) => 
       </div>
     </div>
   );
+};
+const formatDate = (date: Date | null): string | null => {
+  if (!date) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 export default DatePickerOne;

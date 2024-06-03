@@ -43,7 +43,7 @@ const ECommerce: React.FC = () => {
           </CardDataStats>
         ) : null}
         {user?.profile?.user == "hod" || user?.profile?.user == "admin" ? (
-          <CardDataStats title="Hod" total="12 Leaves" rate="4.35%" levelUp>
+          <CardDataStats title="Hod" total="12 Leaves" rate="4.35%" levelUp >
            <RiUserSettingsFill className="fill-primary dark:fill-white h-5 w-5" />
           </CardDataStats>
         ) : null}
@@ -77,7 +77,8 @@ const ECommerce: React.FC = () => {
         <MapOne />
         <ChatCard />
       </div> */}
-      <div className="mt-6">
+      <div className="mt-6 boxrounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <h4 className="mb-3 font-bold text-title-sm2">Leave Request</h4>
         <TableThree />
       </div>
     </>

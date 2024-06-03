@@ -7,6 +7,7 @@ import Image from "next/image";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import logo from "../../../public/images/logo/logo.svg";
 import { FaCalendarAlt } from "react-icons/fa";
+import { useUserContext } from "@/context/UserContext";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -15,7 +16,13 @@ interface SidebarProps {
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const pathname = usePathname();
-
+  const [user,setUser] = useUserContext();
+  const roleByName : any = {
+    1: "admin",
+    2: "hod",
+    3: "faculty",
+    4: "student",
+  };
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
 
@@ -190,11 +197,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                           <li>
                             <Link
                               href="/"
-                              className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${
+                              className={`group relative capitalize flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${
                                 pathname === "/" && "text-white"
                               }`}
                             >
-                              eCommerce
+                              {user?.profile?.user ? user.profile.user : user?.profile?.roleId ? roleByName[user?.profile?.roleId]  : "User"}
                             </Link>
                           </li>
                         </ul>
@@ -468,13 +475,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
           {/* <!-- Others Group --> */}
           <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+            {/* <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
               OTHERS
-            </h3>
+            </h3> */}
 
-            <ul className="mb-6 flex flex-col gap-1.5">
+            {/* <ul className="mb-6 flex flex-col gap-1.5"> */}
               {/* <!-- Menu Item Chart --> */}
-              <li>
+              {/* <li>
                 <Link
                   href="/chart"
                   className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
@@ -512,11 +519,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   </svg>
                   Chart
                 </Link>
-              </li>
+              </li> */}
               {/* <!-- Menu Item Chart --> */}
 
               {/* <!-- Menu Item Ui Elements --> */}
-              <SidebarLinkGroup
+              {/* <SidebarLinkGroup
                 activeCondition={pathname === "/ui" || pathname.includes("ui")}
               >
                 {(handleClick, open) => {
@@ -588,7 +595,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         </svg>
                       </Link>
                       {/* <!-- Dropdown Menu Start --> */}
-                      <div
+                      {/* <div
                         className={`translate transform overflow-hidden ${
                           !open && "hidden"
                         }`}
@@ -615,16 +622,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             </Link>
                           </li>
                         </ul>
-                      </div>
+                      </div> */}
                       {/* <!-- Dropdown Menu End --> */}
-                    </React.Fragment>
-                  );
-                }}
-              </SidebarLinkGroup>
+                    {/* </React.Fragment> */}
+                  {/* );
+                }} */}
+              {/* </SidebarLinkGroup> */} 
               {/* <!-- Menu Item Ui Elements --> */}
 
               {/* <!-- Menu Item Auth Pages --> */}
-              <SidebarLinkGroup
+              {/* <SidebarLinkGroup
                 activeCondition={
                   pathname === "/auth" || pathname.includes("auth")
                 }
@@ -694,7 +701,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         </svg>
                       </Link>
                       {/* <!-- Dropdown Menu Start --> */}
-                      <div
+                      {/* <div
                         className={`translate transform overflow-hidden ${
                           !open && "hidden"
                         }`}
@@ -721,14 +728,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             </Link>
                           </li>
                         </ul>
-                      </div>
+                      </div> */}
                       {/* <!-- Dropdown Menu End --> */}
-                    </React.Fragment>
-                  );
-                }}
-              </SidebarLinkGroup>
+                    {/* </React.Fragment> */}
+                  {/* );
+                }} */}
+              {/* </SidebarLinkGroup>  */}
               {/* <!-- Menu Item Auth Pages --> */}
-            </ul>
+            {/* </ul> */}
           </div>
         </nav>
         {/* <!-- Sidebar Menu --> */}

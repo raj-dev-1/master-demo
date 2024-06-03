@@ -13,6 +13,7 @@ import { useFormik } from "formik";
 import { settingValidation } from "@/validations/loginValidation";
 import { putApiCall } from "@/utils/apicall";
 import { TbPasswordUser } from "react-icons/tb";
+import { toast } from "react-toastify";
 
 const Settings = () => {
   const [user, setUser] = useUserContext();
@@ -60,12 +61,16 @@ const Settings = () => {
   });
   const setProfile = async () => {
     try {
-      const result = await putApiCall("/user/editUser", values);
+      let result : any;
       console.log(result);
-      if (result) {
-        const updatedUser = result.user;
-        const { message } = result;
-        // Assuming setUser is a React state updater function
+      if(user.profile.user == "student" || user.profile.userId == 4){
+        result = await putApiCall("/user/editUser", values);
+      } else {
+        result = await putApiCall("/manage/editUser", values);
+      }
+      if (result?.status === 200) {
+        const updatedUser = result.data.user;
+        const { message } = result.data;
         setUser((prevUser: any) => ({
           ...prevUser,
           message,
@@ -73,14 +78,13 @@ const Settings = () => {
             ...updatedUser,
           },
         }));
+        toast.success(message || "Profile updated successfully");
       }
-    } catch (error) {
+    } catch (error : any) {
       console.error("Error updating user profile:", error);
-      // Handle error if necessary
+      toast.error(error.response?.data?.message || error.message || "An error occurred while updating the profile");
     }
   };
-
-  console.log("setting", user);
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-full">

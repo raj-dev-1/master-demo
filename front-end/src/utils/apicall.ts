@@ -8,18 +8,19 @@ export const getApiCall = async (url: string) => {
     return res;
   } catch (error: any) {
     console.error(error);
-    throw new Error(error.response?.data?.message || error.message || 'An error occurred');
-    return error;
+    return error?.response?.data;
+    // throw new Error(error.response?.data?.message || error.message || 'An error occurred');
   }
 };
 
 export const postApiCall = async (url: string, data: any) => {
   try {
-    const res: any = await axios.post(`${baseUrl + url}`, data, { withCredentials: true });
+    const res: any = await axios.post(`${baseUrl + url}`, data, { withCredentials: true })
     return res;
   } catch (error: any) {
     console.error(error);
-    throw new Error(error.response?.data?.message || error.message || 'An error occurred');
+    return error?.response?.data;
+    // throw new Error(error.response?.data?.message || error.message || 'An error occurred');
   }
 };
 
@@ -29,6 +30,6 @@ export const putApiCall = async (url: string, data: any) => {
     return res;
   } catch (error: any) {
     console.error(error);
-    throw new Error(error.response?.data?.message || error.message || 'An error occurred');
+    return error?.response?.data;
   }
 };

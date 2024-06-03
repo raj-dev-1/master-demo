@@ -8,7 +8,6 @@ import { loginValidation } from "@/validations/loginValidation";
 import { LoginFormValues } from "@/types/form";
 import { postApiCall } from "@/utils/apicall";
 import { useRouter } from "next/navigation";
-import { useUserContext } from "@/context/UserContext";
 import { toast } from "react-toastify";
 
 const page = () => {
@@ -21,7 +20,6 @@ const page = () => {
     password: "",
   };
   const router = useRouter();
-  const [user,setUser] = useUserContext();
   // console.log(user);
   // const  handleChange = (e : any) => {
   //   let { value , name  } = e.target;
@@ -40,23 +38,21 @@ const page = () => {
     initialValues: InitialValues,
     validationSchema: loginValidation,
     onSubmit: async (values) => {
-      // Reset the form values
-      console.log(values);
       const result = await postApiCall("/user/login", values);
       console.log(result);
-      if (result?.status == 200) {
-        const expirationDate = new Date();
-        expirationDate.setTime(expirationDate.getTime() + (1 * 60 * 60 * 1000)); // 1 hours in milliseconds
-        Cookies.set('jwt', result.token, { expires: expirationDate }); 
-        toast.success("Login successful");
-        router.push('/'); // Redirect to home page
-      } else {
-        toast.error("Login failed");
-      }
-      resetForm();
-    },
+      if (result?.status == 200) { 
+        // const expirationDate = new Date(); 
+        // expirationDate.setTime(expirationDate.getTime() + (1 * 60 * 60 * 1000)); // 1 hours in milliseconds
+        Cookies.set('jwt', result.token); 
+        toast.success("Login successful"); 
+        router.push('/'); 
+      } else { 
+        toast.error(result.message); 
+      } 
+      resetForm(); 
+    }, 
   });
-
+console.log(errors);
   return (
     <section className="bg-white">
       <div className="grid h-screen grid-cols-1 lg:grid-cols-2">

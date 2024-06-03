@@ -28,6 +28,7 @@ const privateRoutes: Record<string, string[]> = {
     "/calendar",
     "/profile",
     "/tables",
+    "/leaves",
     "/settings",
     "/forms/form-elements",
     "/forms/form-layout",
@@ -87,8 +88,10 @@ export default async function middleware(req: NextRequest) {
 
     } catch (error) {
       console.error("Token verification failed:", error);
-      const loginURL = new URL("/user/login", req.nextUrl.origin);
-      return NextResponse.redirect(loginURL.toString());
+      const response = NextResponse.redirect(new URL("/user/login", req.nextUrl.origin));
+      response.cookies.delete('jwt');
+      return response;
+      
     }
   }
   // // Default response

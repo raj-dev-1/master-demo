@@ -38,7 +38,7 @@ const TableThree = () => {
   const getApi = async () => {
     try {
       let result: any;
-      if (user.profile.user == "student") {
+      if (user.profile.user == "student" || user.profile.userId == 4) {
         result = await getApiCall("/user/leaveStatus");
         setData(result.data);
       } else {
@@ -49,6 +49,7 @@ const TableThree = () => {
       console.error("Error fetching user data:", error);
     }
   };
+  
   useEffect(() => {
     if(user){
       getApi();
@@ -56,7 +57,7 @@ const TableThree = () => {
   }, [user]);
 
   return (
-    <div className="relative overflow-x-auto shadow-default dark:border-strokedark sm:rounded-sm">
+    <div className="relative overflow-x-auto dark:border-strokedark sm:rounded-sm">
       <table className="text-gray-500 dark:text-gray-400 w-full text-left text-sm rtl:text-right">
         <thead className="text-gray-700 border-b-2 border-stroke bg-white text-xs uppercase dark:border-strokedark dark:bg-boxdark">
           <tr>
