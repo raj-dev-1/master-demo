@@ -9,9 +9,13 @@ import { LuUser } from "react-icons/lu";
 import { MdOutlineMailOutline } from "react-icons/md";
 
 import { useEffect, useState } from "react";
-import { getApiCall } from "@/utils/apicall";
+import { getApiCall, putApiCall } from "@/utils/apicall";
 import DatePickerOne from "@/components/FormElements/DatePicker/DatePickerOne";
 import SelectGroupTwo from "@/components/SelectGroup/SelectGroupTwo";
+import { useFormik } from "formik";
+import { ApplyFormValues } from "@/types/form";
+import { settingValidation } from "@/validations/loginValidation";
+import { toast } from "react-toastify";
 
 interface LeaveBalanceData {
   userId: number;
@@ -34,6 +38,13 @@ const Leaves: React.FC = () => {
     totalWorkingDays: "",
     attendancePercentage: "",
   });
+  const InitialValues: ApplyFormValues = {
+    startDate: "",
+    endDate: "",
+    requestToId: null,
+    leaveType: "",
+    reason: ""
+  };
   const [date1,setDate1] =  useState<Date | null>(null);
   const [date2,setDate2] =  useState<Date | null>(null);
   const [dateDifference, setDateDifference] = useState<number | null>(null);
@@ -68,14 +79,59 @@ const Leaves: React.FC = () => {
       getApi();
     }
   }, [user]);
+
   useEffect(() => {
     setDateDifference(calculateDateDifference(date1, date2));
   }, [date1, date2]);
+
+  const {
+    values,
+    handleBlur,
+    handleChange,
+    handleSubmit,
+    errors,
+    touched,
+    resetForm,
+    setFieldValue,
+  } = useFormik({
+    initialValues: InitialValues,
+    validationSchema: settingValidation,
+    onSubmit: (values) => {
+      console.log(values);
+      // setApplyLeave();
+    },
+  });
+
+  // const setApplyLeave = async () => {
+  //   try {
+  //     let result : any;
+  //     console.log(result);
+  //     if(user.profile.user == "student" || user.profile.userId == 4){
+  //       result = await putApiCall("/user/editUser", values);
+  //     } else {
+  //       result = await putApiCall("/manage/editUser", values);
+  //     }
+  //     if (result?.status === 200) {
+  //       const updatedUser = result.data.user;
+  //       const { message } = result.data;
+  //       setUser((prevUser: any) => ({
+  //         ...prevUser,
+  //         message,
+  //         profile: {
+  //           ...updatedUser,
+  //         },
+  //       }));
+  //       toast.success(message || "Profile updated successfully");
+  //     }
+  //   } catch (error : any) {
+  //     console.error("Error updating user profile:", error);
+  //     toast.error(error.response?.data?.message || error.message || "An error occurred while updating the profile");
+  //   }
+  // };
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-full">
         <Breadcrumb pageName="Apply Leaves" />
-
         <div className="flex flex-wrap gap-8 xl:flex-nowrap">
           <div className="w-full xl:w-3/5">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -88,7 +144,7 @@ const Leaves: React.FC = () => {
                 <form action="#">
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                     <div className="w-full sm:w-1/2">
-                      <SelectGroupTwo title="Leave Type" />
+                      <SelectGroupTwo title="Request To"/>
                     </div>
 
                     <div className="w-full sm:w-1/2">
@@ -106,10 +162,10 @@ const Leaves: React.FC = () => {
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                     <div className="w-full sm:w-1/2">
-                      <DatePickerOne label="From"   setdate={date1 ?? undefined}  onDateChange={setDate1} />
+                      <DatePickerOne label="From" setdate={date1 ?? undefined}  onDateChange={setDate1} />
                     </div>
                     <div className="w-full sm:w-1/2">
-                      <DatePickerOne label="To"   setdate={date2 ?? undefined}  onDateChange={setDate2} />
+                      <DatePickerOne label="To" setdate={date2 ?? undefined}  onDateChange={setDate2} />
                     </div>
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">

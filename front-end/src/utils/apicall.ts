@@ -1,5 +1,4 @@
 import axios from "axios";
-import { toast } from "react-toastify";
 const baseUrl = process.env.NEXT_PUBLIC_BASEURL;
 
 export const getApiCall = async (url: string) => {

@@ -18,3 +18,11 @@ export interface SettingFormValues {
   updatedAt?: string;
   user: string;
 }
+
+export interface ApplyFormValues {
+  startDate: string;
+  endDate: string;
+  requestToId: number | null;
+  leaveType: string;
+  reason: string;
+}

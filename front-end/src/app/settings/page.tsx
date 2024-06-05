@@ -18,6 +18,10 @@ import { toast } from "react-toastify";
 const Settings = () => {
   const [user, setUser] = useUserContext();
   const [gender, setGender] = useState("");
+  const [passwordData,setPasswordData] = useState({
+    email: user?.profile?.email,
+    password: "",
+  });
 
   useEffect(() => {
     if (user?.profile?.gender) {
@@ -85,6 +89,30 @@ const Settings = () => {
       toast.error(error.response?.data?.message || error.message || "An error occurred while updating the profile");
     }
   };
+
+  const handleChangeP = (e:any) => {
+    const { name, value } = e.target;
+    setPasswordData((prevData: any) => ({
+     ...prevData,
+      [name]: value,
+    }));
+  }
+  const handleSubmitP = async (e: any) => {
+    e.preventDefault();
+    try {
+      console.log(passwordData);
+      const result = await putApiCall("/user/resetPassword", passwordData);
+      if (result?.status === 200) {
+        toast.success(result.data.message || "Password updated successfully");
+      } else{
+        toast.error(result.data.message || "An error occurred while updating the password");
+      }
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      toast.error(error.response?.data?.message || error.message || "An error occurred while updating the password");
+    }
+  }
+  
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-full">
@@ -344,7 +372,7 @@ const Settings = () => {
                 </h3>
               </div>
               <div className="p-7">
-                <form action="#">
+                <form onSubmit={handleSubmitP}>
                   <div className="mb-5.5">
                     <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                       Email
@@ -357,7 +385,6 @@ const Settings = () => {
                         className="w-full rounded border border-stroke bg-gray py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                         type="email"
                         name="email"
-                        id="email"
                         placeholder="devidjond45@gmail.com"
                         value={user?.profile?.email}
                         readOnly
@@ -378,13 +405,12 @@ const Settings = () => {
                         type="password"
                         name="password"
                         id="password"
-                        value="************"
-                        readOnly
+                        onChange={handleChangeP}
                       />
                     </div>
                   </div>
 
-                  <div className="mb-5.5">
+                  {/* <div className="mb-5.5">
                     <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                       Current password
                     </label>
@@ -395,13 +421,12 @@ const Settings = () => {
                       <input
                         className="w-full rounded border border-stroke bg-gray py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                         type="password"
-                        name="current-password"
-                        id="current-password"
-                        value="************"
-                        readOnly
+                        name="confirmPassword"
+                        id="confirmPassword"
+                        onChange={handleChangeP}
                       />
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="flex justify-end gap-4.5">
                     <button

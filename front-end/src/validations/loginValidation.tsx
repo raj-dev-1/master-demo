@@ -27,3 +27,23 @@ export const settingValidation = Yup.object({
     .min(2, "department should be at least 2 characters")
     .required("Please enter your department"),
 });
+
+export const applyValidation = Yup.object({
+  startDate: Yup.date()
+    .required("Please enter the start date"),
+  endDate: Yup.date()
+    .required("Please enter the end date")
+    .min(
+      Yup.ref('startDate'), 
+      "End date cannot be before start date"
+    ),
+  requestToId: Yup.number()
+    .nullable()
+    .required("Please select the person to request to"),
+  leaveType: Yup.string()
+    .oneOf(["male", "female"], "Please select a valid leave type")
+    .required("Please select the leave type"),
+  reason: Yup.string()
+    .min(5, "Reason should be at least 5 characters")
+    .required("Please enter the reason for leave"),
+});

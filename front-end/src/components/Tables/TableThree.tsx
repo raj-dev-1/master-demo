@@ -163,7 +163,7 @@ const TableThree = () => {
           </tr>
         </thead>
         <tbody>
-          {data ? (
+          { data?.leaveStatus?.length != 0 ? (
             data?.leaveStatus?.map((item: any, index: number) => (
               <tr
                 key={index}
