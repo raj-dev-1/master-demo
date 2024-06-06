@@ -270,7 +270,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Profile --> */}
 
               {/* <!-- Menu Item Forms --> */}
-              <SidebarLinkGroup
+              {/* <SidebarLinkGroup
                 activeCondition={
                   pathname === "/forms" || pathname.includes("forms")
                 }
@@ -341,7 +341,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         </svg>
                       </Link>
                       {/* <!-- Dropdown Menu Start --> */}
-                      <div
+                      {/* <div
                         className={`translate transform overflow-hidden ${
                           !open && "hidden"
                         }`}
@@ -370,12 +370,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             </Link>
                           </li>
                         </ul>
-                      </div>
+                      </div> */}
                       {/* <!-- Dropdown Menu End --> */}
-                    </React.Fragment>
+                    {/* </React.Fragment>
                   );
                 }}
-              </SidebarLinkGroup>
+              </SidebarLinkGroup> */}
               {/* <!-- Menu Item Forms --> */}
 
               {/* <!-- Menu Item Tables --> */}

@@ -13,7 +13,7 @@ import { UserFetcher } from "../UserFetcher/UserFetcher";
 import { PiStudentLight } from "react-icons/pi";
 import { RiUserSettingsFill } from "react-icons/ri";
 import { GiTeacher } from "react-icons/gi";
-import TableOne from "../Tables/TableOne";
+import TableOne from "../Tables/TableOne"; 
 
 const ECommerce: React.FC = () => {
   const [user, setUser] = useUserContext();
@@ -52,10 +52,14 @@ const ECommerce: React.FC = () => {
           <TableThree />
         </div>
       )}
-      <div className="boxrounded-sm mt-6 border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-          <h4 className="mb-3 text-title-sm2 font-bold">Leave Request</h4>
-          <TableOne />
-        </div>
+      {
+        user?.profile?.user!= "student" && user?.profile?.roleId!= 4 && (
+          <div className="boxrounded-sm mt-6 border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+            <h4 className="mb-3 text-title-sm2 font-bold">Leave Request</h4>
+            <TableOne />
+          </div>
+        )
+      }
     </>
   );
 };

@@ -16,6 +16,9 @@ import { useFormik } from "formik";
 import { ApplyFormValues } from "@/types/form";
 import { settingValidation } from "@/validations/loginValidation";
 import { toast } from "react-toastify";
+import { leaveDay } from "@/utils/dropdownData";
+import { ImExit } from "react-icons/im";
+import { FaUserPlus } from "react-icons/fa";
 
 interface LeaveBalanceData {
   userId: number;
@@ -29,6 +32,7 @@ interface LeaveBalanceData {
 
 const Leaves: React.FC = () => {
   const [user] = useUserContext();
+  const [facultyList,setFacultyList] = useState<null>(null);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceData>({
     userId: 0,
     totalLeave: "",
@@ -45,6 +49,7 @@ const Leaves: React.FC = () => {
     leaveType: "",
     reason: ""
   };
+  console.log(facultyList);
   const [date1,setDate1] =  useState<Date | null>(null);
   const [date2,setDate2] =  useState<Date | null>(null);
   const [dateDifference, setDateDifference] = useState<number | null>(null);
@@ -67,6 +72,8 @@ const Leaves: React.FC = () => {
         } else {
         leaveBalanceResult = await getApiCall("/manage/leaveBalance");
       }
+      const facultyListData = await getApiCall("/manage/facultyList");
+      setFacultyList(facultyListData?.data?.facultyList);
       setLeaveBalance(leaveBalanceResult.data.leaveBalance);
       // Fetch leave balance data
     } catch (error) {
@@ -144,7 +151,7 @@ const Leaves: React.FC = () => {
                 <form action="#">
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                     <div className="w-full sm:w-1/2">
-                      <SelectGroupTwo title="Request To"/>
+                      <SelectGroupTwo title="Request To" leaveData={facultyList} icon={<FaUserPlus />} />
                     </div>
 
                     <div className="w-full sm:w-1/2">
@@ -177,10 +184,11 @@ const Leaves: React.FC = () => {
                         value={dateDifference !== null ? `${dateDifference} days` : "Select both dates"}
                         className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                         type="text"
+                        disabled
                       />
                     </div>
                     <div className="w-full sm:w-1/2">
-                      <SelectGroupTwo title="Leave Day" />
+                      <SelectGroupTwo title="Leave Day" leaveData={leaveDay} icon={<ImExit />}/>
                     </div>
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">

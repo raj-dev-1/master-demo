@@ -9,11 +9,11 @@ const routes = express.Router();
 routes.post('/login', login);
 routes.get('logout',logout);
 
+routes.get("/facultyList",facultyList);
 routes.use(verifyToken(['admin','hod','faculty']));
 
 routes.get("/studentList", studentList);
 routes.get("/hodList", hodList);
-routes.get("/facultyList",facultyList);
 routes.get("/leaveStatus", leaveStatus);
 routes.post("/leaveApproval/:id", leaveApproval);
 routes.get("/profile", profile);

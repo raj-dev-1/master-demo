@@ -127,7 +127,7 @@ const register = async (req: Request | any, res: Response) => {
       roleId: role.student,
     };
 
-    const user : any = await User.create(newUser);
+    const user: any = await User.create(newUser);
 
     if (!user)
       return res.status(400).json({ message: userMassage.error.signUpError });
@@ -170,7 +170,7 @@ const forgetPassword = async (req: Request | any, res: Response) => {
     const { email } = req.body;
 
     const findUser = await checkUser(email);
-    
+
     if (!findUser) {
       return res.status(404).json({ message: userMassage.error.userNotFound });
     }
@@ -202,7 +202,7 @@ const forgetPassword = async (req: Request | any, res: Response) => {
 const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    
+
     const findUser: any = await checkUser(email);
 
     if (!findUser)
@@ -224,7 +224,7 @@ const login = async (req: Request, res: Response) => {
     };
 
     const token = jwt.sign({ userDetails }, SECRET_KEY, {
-      expiresIn: "1h",
+      expiresIn: "2h",
     });
 
     res.cookie("jwt", token, { httpOnly: true });
@@ -325,7 +325,6 @@ const applyLeave = async (req: Request | any, res: Response) => {
       const errors = Object.values(error.errors).map((err: any) => err.message);
       return res.status(400).json({ errors });
     }
-    console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
@@ -384,7 +383,7 @@ const resetPassword = async (req: Request | any, res: Response) => {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });
   }
-}
+};
 
 const editUser = async (req: Request | any, res: Response) => {
   try {
@@ -412,8 +411,7 @@ const editUser = async (req: Request | any, res: Response) => {
       req.body.image = baseUrl + imgPath + "/" + req.file.filename;
     }
 
-    const { name, email, gender, grNumber, phone, address, image, div } =
-      req.body;
+    const { name, email, gender, grNumber, phone, address, image, div } = req.body;
 
     const updatedUser = {
       name,
@@ -434,9 +432,11 @@ const editUser = async (req: Request | any, res: Response) => {
       return res.status(400).json({
         message: userMassage.error.update,
       });
+    const updatedUserData = await User.findByPk(userId);
 
     return res.status(200).json({
       message: userMassage.success.update,
+      user: updatedUserData,
     });
   } catch (error: any) {
     console.log(error);
@@ -470,5 +470,5 @@ export {
   deleteFile,
   verifyOtp,
   forgetPassword,
-  resetPassword
+  resetPassword,
 };

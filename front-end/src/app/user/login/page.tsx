@@ -46,10 +46,10 @@ const page = () => {
         Cookies.set('jwt', result.token); 
         toast.success("Login successful"); 
         router.push('/'); 
+        resetForm(); 
       } else { 
         toast.error(result.message); 
       } 
-      resetForm(); 
     }, 
   });
 console.log(errors);

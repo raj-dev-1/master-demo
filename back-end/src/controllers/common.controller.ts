@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { userMassage } from "../config/message";
-import { pagination, role } from "../config/variables";
-import { imgPath, User } from "../models/user.model";
+import { role } from "../config/variables";
+import { User } from "../models/user.model";
 import { Op, Sequelize } from "sequelize";
 import { LeaveRequest } from "../models/leaveRequest.model";
 import { UserLeave } from "../models/userLeave.model";
@@ -11,46 +11,32 @@ import { deleteFile } from "./user.controller";
 import path from "path";
 import { unlinkSync } from "fs";
 import { sendLeaveUpdate } from "../utils/sendLeaveUpdate";
+import { getPaginationParams, getSearchResults } from "../utils/pagination";
 
-interface pageQuery {
-  page?: number;
+interface PageQuery {
+  page?: string;
   search?: string;
-  limit?: number;
+  limit?: string;
 }
 
 const studentList = async (req: Request | any, res: Response) => {
   try {
-    const { page, search, limit }: pageQuery = req.query;
+    const { page, search, limit }: PageQuery = req.query;
     const roleId = role.student;
+    const whereCondition = { roleId };
     if (search && search.trim()) {
-      const searchResults = await User.findAll({
-        where: {
-          roleId,
-          name: {
-            [Op.like]: `%${search}%`,
-          },
-        },
-        attributes: {
-          exclude: ["password"],
-        },
-      });
-
+      const searchResults = await getSearchResults(User, ['name','address'], whereCondition, { search });
       return res.status(200).json({
         message: userMassage.success.studentList,
         searchResults,
       });
     }
-    const pageCount = page || pagination.pageCount;
-    const limitDoc: any = limit || pagination.limitDoc;
-    const totalUser = await User.count({ where: { roleId } });
-    const maxPage = totalUser <= limitDoc ? 1 : Math.ceil(totalUser / limitDoc);
 
-    if (pageCount > maxPage)
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} page` });
+    const { skip, limit: limitDoc, pageCount, maxPage } = await getPaginationParams(User, whereCondition, { page, limit });
 
-    const skip = (pageCount - 1) * limitDoc;
+    if (pageCount > maxPage) {
+      return res.status(400).json({ message: `There are only ${maxPage} pages` });
+    }
 
     const studentList = await User.findAll({
       where: { roleId },
@@ -63,101 +49,80 @@ const studentList = async (req: Request | any, res: Response) => {
       studentList,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
 
 const hodList = async (req: Request | any, res: Response) => {
   try {
-    const { page, search, limit }: pageQuery = req.query;
+    const { page, search, limit }: PageQuery = req.query;
     const roleId = role.hod;
+    const whereCondition = { roleId };
     if (search && search.trim()) {
-      const searchResults = await User.findAll({
-        where: {
-          roleId,
-          name: {
-            [Op.like]: `%${search}%`,
-          },
-        },
-        attributes: {
-          exclude: ["password"],
-        },
-      });
+      const searchResults = await getSearchResults(User, ['name','address'], whereCondition, { search });
       return res.status(200).json({
         message: userMassage.success.studentList,
         searchResults,
       });
     }
-    const pageCount = page || pagination.pageCount;
-    const limitDoc: any = limit || pagination.limitDoc;
-    const totalUser = await User.count({ where: { roleId } });
-    const maxPage = totalUser <= limitDoc ? 1 : Math.ceil(totalUser / limitDoc);
+
+    const { skip, limit: limitDoc, pageCount, maxPage } = await getPaginationParams(User,whereCondition, { page, limit });
 
     if (pageCount > maxPage) {
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} page` });
+      return res.status(400).json({ message: `There are only ${maxPage} pages` });
     }
 
-    const skip = (pageCount - 1) * limitDoc;
     const hodList = await User.findAll({
       where: { roleId },
       offset: skip,
       limit: limitDoc,
     });
+
     return res.status(200).json({
       message: userMassage.success.studentList,
       hodList,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
 
 const facultyList = async (req: Request | any, res: Response) => {
   try {
-    const { page, search, limit }: pageQuery = req.query;
+    const { page, search, limit }: PageQuery = req.query;
+    console.log("Received limit:", limit);
+
     const roleId = role.faculty;
+    const whereCondition = { roleId };
+
     if (search && search.trim()) {
-      const searchResults = await User.findAll({
-        where: {
-          roleId,
-          name: {
-            [Op.like]: `%${search}%`,
-          },
-        },
-        attributes: {
-          exclude: ["password"],
-        },
-      });
+      const searchResults = await getSearchResults(User, ['name','address'], whereCondition, { search });
       return res.status(200).json({
         message: userMassage.success.studentList,
         searchResults,
       });
     }
-    const pageCount = page || pagination.pageCount;
-    const limitDoc = limit || pagination.limitDoc;
-    const totalUser = await User.count({ where: { roleId } });
-    const maxPage = totalUser <= limitDoc ? 1 : Math.ceil(totalUser / limitDoc);
+
+    const { skip, limit: limitDoc, pageCount, maxPage } = await getPaginationParams(User, whereCondition, { page, limit });
+
     if (pageCount > maxPage) {
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} page` });
+      return res.status(400).json({ message: `There are only ${maxPage} pages` });
     }
-    const skip = (pageCount - 1) * limitDoc;
+
     const facultyList = await User.findAll({
       where: { roleId },
       offset: skip,
       limit: limitDoc,
     });
+
     return res.status(200).json({
       message: userMassage.success.studentList,
       facultyList,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
@@ -322,19 +287,12 @@ const allLeaveStatus = async (req: Request | any, res: Response) => {
       };
     }
 
-    const PageCount = page || pagination.pageCount;
-    const limitDoc = limit || pagination.limitDoc;
-    const totalLeave = await LeaveRequest.count({ where: whereCondition });
-    const maxPage =
-      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+    const { skip, limit: limitDoc, pageCount, maxPage } = await getPaginationParams(LeaveRequest, whereCondition, { page, limit });
 
-    if (PageCount > maxPage) {
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} page` });
+    if (pageCount > maxPage) {
+      return res.status(400).json({ message: `There are only ${maxPage} pages` });
     }
 
-    const skip = (PageCount - 1) * limitDoc;
     const searchResults = await LeaveRequest.findAll({
       where: whereCondition,
       limit: limitDoc,
@@ -415,8 +373,8 @@ const editStudent = async (req: Request | any, res: Response) => {
 
     if (req.file) {
       const parsedUrl = new URL(image);
-      const imagePath = parsedUrl.pathname;
-      const fullPath = path.join(__dirname, "..", imagePath);
+      const imgPath = parsedUrl.pathname;
+      const fullPath = path.join(__dirname, "..", imgPath);
       await unlinkSync(fullPath);
 
       const baseUrl = `${req.protocol}://${req.get("host")}`;

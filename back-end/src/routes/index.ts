@@ -17,7 +17,7 @@ routes.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/user/login" }),
   function (req, res) {
-    res.redirect("/home");
+    res.redirect("/");
   }
 );
 
