@@ -209,7 +209,7 @@ const editHod = async (req: Request, res: Response) => {
     return res.status(200).json({
       message: userMassage.success.update,
     });
-  } catch (error: any) {
+  } catch (error : any) {
     if (error.name === "SequelizeValidationError") {
       const errors = Object.values(error.errors).map((err: any) => err.message);
       return res.status(400).json({ errors });

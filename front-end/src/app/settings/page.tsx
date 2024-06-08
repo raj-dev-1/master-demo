@@ -1,4 +1,5 @@
 "use client";
+
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Image from "next/image";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
@@ -14,11 +15,13 @@ import { settingValidation } from "@/validations/loginValidation";
 import { putApiCall } from "@/utils/apicall";
 import { TbPasswordUser } from "react-icons/tb";
 import { toast } from "react-toastify";
+import { objectToFormData } from "@/utils/setting";
 
 const Settings = () => {
   const [user, setUser] = useUserContext();
   const [gender, setGender] = useState("");
-  const [passwordData,setPasswordData] = useState({
+  const [fileNew, setFileNew] = useState<any>(null);
+  const [passwordData, setPasswordData] = useState({
     email: user?.profile?.email,
     password: "",
   });
@@ -31,14 +34,14 @@ const Settings = () => {
 
   const handleGenderChange = (value: any) => {
     setGender(value);
-    setFieldValue("gender", value); // Set gender value in formik
+    setFieldValue("gender", value);
   };
 
   const InitialValues: SettingFormValues = {
     name: user?.profile.name || "",
     gender: user?.profile.gender || "",
     email: user?.profile.email || "",
-    image: user?.profile.image || "",
+    image: user?.profile?.image || "",
     phone: user?.profile.phone || "",
     address: user?.profile.address || "",
     department: user?.profile.department || "",
@@ -55,22 +58,31 @@ const Settings = () => {
     touched,
     resetForm,
     setFieldValue,
+    setFieldError,
   } = useFormik({
     initialValues: InitialValues,
     validationSchema: settingValidation,
-    onSubmit: (values) => {
-      console.log(values);
+    onSubmit: () => {
       setProfile();
     },
   });
+
   const setProfile = async () => {
     try {
-      let result : any;
-      console.log(result);
-      if(user.profile.user == "student" || user.profile.userId == 4){
-        result = await putApiCall("/user/editUser", values);
+      let result: any;
+      const formData: any = objectToFormData(values);
+      if (fileNew !== null) {
+        formData.set("image", fileNew);
       } else {
-        result = await putApiCall("/manage/editUser", values);
+        formData.delete("image");
+      }
+      for (const [key, value] of formData.entries()) {
+        console.log(`Key: ${key}, Value: ${value}`);
+      }
+      if (user.profile.user == "student" || user.profile.roleId == 4) {
+        result = await putApiCall("/user/editUser", formData);
+      } else {
+        result = await putApiCall("/manage/editUser", formData);
       }
       if (result?.status === 200) {
         const updatedUser = result.data.user;
@@ -84,19 +96,24 @@ const Settings = () => {
         }));
         toast.success(message || "Profile updated successfully");
       }
-    } catch (error : any) {
+    } catch (error: any) {
       console.error("Error updating user profile:", error);
-      toast.error(error.response?.data?.message || error.message || "An error occurred while updating the profile");
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "An error occurred while updating the profile",
+      );
     }
   };
 
-  const handleChangeP = (e:any) => {
+  const handleChangeP = (e: any) => {
     const { name, value } = e.target;
     setPasswordData((prevData: any) => ({
-     ...prevData,
+      ...prevData,
       [name]: value,
     }));
-  }
+  };
+
   const handleSubmitP = async (e: any) => {
     e.preventDefault();
     try {
@@ -104,15 +121,36 @@ const Settings = () => {
       const result = await putApiCall("/user/resetPassword", passwordData);
       if (result?.status === 200) {
         toast.success(result.data.message || "Password updated successfully");
-      } else{
-        toast.error(result.data.message || "An error occurred while updating the password");
+      } else {
+        toast.error(
+          result.data.message ||
+            "An error occurred while updating the password",
+        );
       }
     } catch (error: any) {
       console.error("Error updating password:", error);
-      toast.error(error.response?.data?.message || error.message || "An error occurred while updating the password");
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "An error occurred while updating the password",
+      );
     }
-  }
-  
+  };
+
+  const handleChangeFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile: any = e.target.files?.[0];
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (selectedFile && !allowedTypes.includes(selectedFile.type)) {
+      setFieldError(
+        "image",
+        "Invalid file type. Please select a JPEG, PNG, or JPG image.",
+      );
+      return;
+    } else if (selectedFile) {
+      setFileNew(selectedFile);
+    }
+  };
+
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-full">
@@ -163,7 +201,7 @@ const Settings = () => {
                         Phone Number
                       </label>
                       <input
-                        className="w-full rounded border border-stroke bg-gray dark:text-white px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary"
+                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                         type="text"
                         name="phone"
                         id="phone"
@@ -206,29 +244,32 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  {user?.profile?.user !== "student" && user?.profile?.roleId !== 4 && (
-                    <div className="mb-5.5">
-                      <label
-                        className="mb-3 block text-sm font-medium text-black dark:text-white"
-                        htmlFor="department"
-                      >
-                        Department
-                      </label>
-                      <input
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                        type="text"
-                        name="department"
-                        id="department"
-                        placeholder="devidjhon24"
-                        value={values.department}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
-                      {touched.department && errors.department && (
-                        <div className="text-red-500">{errors.department}</div>
-                      )}
-                    </div>
-                  )}
+                  {user?.profile?.user !== "student" &&
+                    user?.profile?.roleId !== 4 && (
+                      <div className="mb-5.5">
+                        <label
+                          className="mb-3 block text-sm font-medium text-black dark:text-white"
+                          htmlFor="department"
+                        >
+                          Department
+                        </label>
+                        <input
+                          className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                          type="text"
+                          name="department"
+                          id="department"
+                          placeholder="devidjhon24"
+                          value={values.department}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                        />
+                        {touched.department && errors.department && (
+                          <div className="text-red-500">
+                            {errors.department}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                   <div className="mb-5.5">
                     <label
@@ -276,7 +317,11 @@ const Settings = () => {
                     <button
                       className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
                       type="button"
-                      onClick={() => resetForm()}
+                      onClick={(e) => {
+                        e.preventDefault(); 
+                        resetForm(); 
+                        setFileNew(null);
+                      }}
                     >
                       Cancel
                     </button>
@@ -299,16 +344,43 @@ const Settings = () => {
                 </h3>
               </div>
               <div className="p-7">
-                <form action="#">
+                <form action="#" onSubmit={handleSubmit}>
                   <div className="mb-4 flex items-center gap-3">
                     <div className="h-15 w-15 overflow-hidden rounded-full">
-                      <Image
-                        src={user?.profile?.image} // Dynamic image source from API response
+                      {/* <Image
+                        src={user?.profile?.image}
                         width={60}
                         height={60}
                         alt="User"
-                      />
+                      /> */}
+                      {fileNew !== null && (
+                        <div className="flex items-center justify-center">
+                          <Image
+                            className="rounded-full object-cover"
+                            src={URL.createObjectURL(fileNew)}
+                            width={60}
+                            height={60}
+                            alt="profile"
+                          />
+                        </div>
+                      )}
+                      {fileNew === null && (
+                        <div className="flex items-center justify-center">
+                          <Image
+                            className="rounded-full object-cover"
+                            src={values.image}
+                            width={60}
+                            height={60}
+                            alt="profile"
+                          />
+                        </div>
+                      )}
                     </div>
+                    {errors.image && touched.image && (
+                      <p className="errors_para" style={{ marginTop: "15px" }}>
+                        {errors.image}
+                      </p>
+                    )}
                     <div>
                       <span className="mb-1.5 text-black dark:text-white">
                         Edit your photo
@@ -331,6 +403,7 @@ const Settings = () => {
                     <input
                       type="file"
                       accept="image/*"
+                      onChange={handleChangeFile}
                       className="absolute inset-0 z-50 m-0 h-full w-full cursor-pointer p-0 opacity-0 outline-none"
                     />
                     <div className="flex flex-col items-center justify-center space-y-3">
@@ -349,6 +422,10 @@ const Settings = () => {
 
                   <div className="mb-6 flex justify-end gap-4.5">
                     <button
+                      onClick={(e) => {
+                        e.preventDefault(); 
+                        setFileNew(null);
+                      }}
                       className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
                       type="submit"
                     >

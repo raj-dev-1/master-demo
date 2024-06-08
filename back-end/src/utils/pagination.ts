@@ -14,7 +14,11 @@ interface PaginationResult {
   maxPage: number;
 }
 
-export const getPaginationParams = async (model: any, whereCondition: any, { page, limit }: PageQuery): Promise<PaginationResult> => {
+export const getPaginationParams = async (
+  model: any,
+  whereCondition: any,
+  { page, limit }: PageQuery
+): Promise<PaginationResult> => {
   const pageCount = parseInt(page, 10) || pagination.pageCount;
   const limitDoc = parseInt(limit, 10) || pagination.limitDoc;
 
@@ -26,12 +30,16 @@ export const getPaginationParams = async (model: any, whereCondition: any, { pag
   return { skip, limit: limitDoc, pageCount, limitDoc, maxPage };
 };
 
-
 interface SearchQuery {
   search?: string;
 }
 
-export const getSearchResults = async (model: any, searchFields: string[], whereCondition: any, { search }: SearchQuery) => {
+export const getSearchResults = async (
+  model: any,
+  searchFields: string[],
+  whereCondition: any,
+  { search }: SearchQuery
+) => {
   if (search && search.trim()) {
     whereCondition[Op.or] = searchFields.map((field) => ({
       [field]: {

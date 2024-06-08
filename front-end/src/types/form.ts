@@ -22,7 +22,7 @@ export interface SettingFormValues {
 export interface ApplyFormValues {
   startDate: string;
   endDate: string;
-  requestToId: number | null;
+  requestToId: any;
   leaveType: string;
   reason: string;
 }

@@ -1,24 +1,17 @@
 "use client";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import Image from "next/image";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useUserContext } from "@/context/UserContext";
-import CheckboxFour from "@/components/Checkboxes/CheckboxFour";
-import { IoCloudUploadOutline } from "react-icons/io5";
-import { LuUser } from "react-icons/lu";
-import { MdOutlineMailOutline } from "react-icons/md";
 
 import { useEffect, useState } from "react";
-import { getApiCall, putApiCall } from "@/utils/apicall";
+import { getApiCall } from "@/utils/apicall";
 import DatePickerOne from "@/components/FormElements/DatePicker/DatePickerOne";
-import SelectGroupTwo from "@/components/SelectGroup/SelectGroupTwo";
 import { useFormik } from "formik";
 import { ApplyFormValues } from "@/types/form";
-import { settingValidation } from "@/validations/loginValidation";
+import { applyValidation } from "@/validations/loginValidation";
 import { toast } from "react-toastify";
 import { leaveDay } from "@/utils/dropdownData";
-import { ImExit } from "react-icons/im";
-import { FaUserPlus } from "react-icons/fa";
+import CustomSelect2 from "@/components/SelectGroup/SelectGroupTwo";
 
 interface LeaveBalanceData {
   userId: number;
@@ -32,7 +25,7 @@ interface LeaveBalanceData {
 
 const Leaves: React.FC = () => {
   const [user] = useUserContext();
-  const [facultyList,setFacultyList] = useState<null>(null);
+  const [facultyList,setFacultyList] = useState<any>(null);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceData>({
     userId: 0,
     totalLeave: "",
@@ -42,6 +35,7 @@ const Leaves: React.FC = () => {
     totalWorkingDays: "",
     attendancePercentage: "",
   });
+
   const InitialValues: ApplyFormValues = {
     startDate: "",
     endDate: "",
@@ -49,7 +43,7 @@ const Leaves: React.FC = () => {
     leaveType: "",
     reason: ""
   };
-  console.log(facultyList);
+
   const [date1,setDate1] =  useState<Date | null>(null);
   const [date2,setDate2] =  useState<Date | null>(null);
   const [dateDifference, setDateDifference] = useState<number | null>(null);
@@ -100,15 +94,15 @@ const Leaves: React.FC = () => {
     touched,
     resetForm,
     setFieldValue,
-  } = useFormik({
+  } : any = useFormik({
     initialValues: InitialValues,
-    validationSchema: settingValidation,
+    validationSchema: applyValidation,
     onSubmit: (values) => {
       console.log(values);
       // setApplyLeave();
     },
   });
-
+  console.log("values",values);
   // const setApplyLeave = async () => {
   //   try {
   //     let result : any;
@@ -151,7 +145,14 @@ const Leaves: React.FC = () => {
                 <form action="#">
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                     <div className="w-full sm:w-1/2">
-                      <SelectGroupTwo title="Request To" leaveData={facultyList} icon={<FaUserPlus />} />
+                      <CustomSelect2 
+                        errors={errors.requestToId}
+                        touched={touched.requestToId}
+                        values={values.requestToId}
+                        name="requestToId"
+                        setformik={setFieldValue}
+                        option={facultyList}
+                      />
                     </div>
 
                     <div className="w-full sm:w-1/2">
@@ -188,7 +189,15 @@ const Leaves: React.FC = () => {
                       />
                     </div>
                     <div className="w-full sm:w-1/2">
-                      <SelectGroupTwo title="Leave Day" leaveData={leaveDay} icon={<ImExit />}/>
+                      {/* <SelectGroupTwo title="Leave Day" leaveData={leaveDay} icon={<ImExit />}/> */}
+                      <CustomSelect2 
+                        errors={errors.leaveType}
+                        touched={touched.leaveType}
+                        values={values.leaveType}
+                        name="leaveType"
+                        setformik={setFieldValue}
+                        option={leaveDay}
+                      />
                     </div>
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">

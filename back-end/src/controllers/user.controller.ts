@@ -412,7 +412,6 @@ const editUser = async (req: Request | any, res: Response) => {
     }
 
     const { name, email, gender, grNumber, phone, address, image, div } = req.body;
-
     const updatedUser = {
       name,
       email,
@@ -438,6 +437,7 @@ const editUser = async (req: Request | any, res: Response) => {
       message: userMassage.success.update,
       user: updatedUserData,
     });
+    
   } catch (error: any) {
     console.log(error);
     if (error.name === "SequelizeValidationError") {
