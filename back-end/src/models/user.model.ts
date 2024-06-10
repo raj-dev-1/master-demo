@@ -4,6 +4,7 @@ import db from '../config/sequelize';
 import { DataTypes, Model } from 'sequelize';
 import Role from './role.model';
 import Joi from 'joi';
+import { unlinkSync } from 'fs';
 
 interface UserData {
     id: number;
@@ -123,7 +124,17 @@ const imageStorage = multer.diskStorage({
     }
 });
 
+const deleteFile = async (file: { path?: string }) => {
+    try {
+      if (file && file.path) {
+        await unlinkSync(file.path);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
 const uploadImgPath = multer({ storage: imageStorage }).single("image");
 User.belongsTo(Role, { onDelete: "CASCADE", foreignKey: "roleId" });
 
-export { User, uploadImgPath, imgPath, validateData };
+export { User, uploadImgPath, imgPath, validateData, deleteFile };

@@ -1,3 +1,4 @@
+import { Condition } from "../controllers/auth.controller";
 import { User } from "../models/user.model";
 
 // interface UserInstance {
@@ -23,4 +24,13 @@ const findUserId = async (email: string): Promise<any | number> => {
   }
 };
 
-export { checkUser, findUserId };
+const updateUserService = async (updatePassword : any,conditon: Condition): Promise<any | number> => {
+  try {
+    const result: any = await User.update(updatePassword,conditon);
+    return result;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export { checkUser, findUserId, updateUserService };

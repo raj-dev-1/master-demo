@@ -1,12 +1,14 @@
 import express, { Router } from "express";
-import studentRoute from "./student.routes";
-import commonRoute from "./common.routes";
+import userRoute from "./user.routes";
+import leaveRoutes from "./userLeave.routes";
+import authRoutes from "./auth.routes";
 import passport from "passport";
 
 const routes: Router = express.Router();
 
-routes.use("/user", studentRoute);
-routes.use("/manage", commonRoute);
+routes.use("/api/v1/user", userRoute);
+routes.use("/api/v1/leave", leaveRoutes);
+routes.use("/api/v1/auth", authRoutes);
 
 routes.get(
   "/google",

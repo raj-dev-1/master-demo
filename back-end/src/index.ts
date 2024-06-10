@@ -2,8 +2,6 @@ import express, { Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import "./models/index";
 import indexRoutes from "./routes/index";
-import hodRoutes from "./routes/hod.routes";
-import adminRoutes from "./routes/admin.routes";
 import path from "path";
 import passport from "passport";
 import session from "express-session";
@@ -57,8 +55,7 @@ app.get("/", (req: Request, res: Response) => {
 // };
 
 app.use("/", indexRoutes);
-app.use("/hod", hodRoutes);
-app.use("/admin", adminRoutes);
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
