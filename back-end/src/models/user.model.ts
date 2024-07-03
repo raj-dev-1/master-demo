@@ -56,11 +56,12 @@ User.init(
         },
         gender: {
             type: DataTypes.ENUM("male", "female"),
-            allowNull: false,
+            allowNull: true,
         },
         image: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
+            defaultValue: 'https://st3.depositphotos.com/15648834/17930/v/450/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg'
         },
         gr_number: {
             type: DataTypes.STRING,
@@ -74,7 +75,7 @@ User.init(
         },
         address: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         department: {
             type: DataTypes.STRING,
@@ -104,11 +105,11 @@ function validateData(data: Record<string, any>) {
         name: Joi.string().required(),
         email: Joi.string().email().required(),
         password: Joi.string().min(4).max(8).required(),
-        confirmPassword: Joi.string().min(4).max(8).required(),
-        gender: Joi.string().valid("male", "female").required(),
+        confirmPassword: Joi.string().min(4).max(8).optional(),
+        gender: Joi.string().valid("male", "female").optional(),
         gr_number: Joi.string().allow(null).optional(),
-        phone: Joi.string().required(),
-        address: Joi.string().required(),
+        phone: Joi.string().required().optional(),
+        address: Joi.string().optional(),
         department: Joi.string().allow(null).optional(),
         div: Joi.string().allow(null).optional(),
     });
@@ -132,7 +133,7 @@ const deleteFile = async (file: { path?: string }) => {
     } catch (error) {
       console.log(error);
     }
-  };
+};
 
 const uploadImgPath = multer({ storage: imageStorage }).single("image");
 User.belongsTo(Role, { onDelete: "CASCADE", foreignKey: "roleId" });

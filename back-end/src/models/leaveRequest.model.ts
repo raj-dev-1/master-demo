@@ -2,7 +2,6 @@ import { DataTypes, Model, Optional } from "sequelize";
 import { User } from "./user.model";
 import db from "../config/sequelize";
 import { UserLeave } from "./userLeave.model";
-// import { UserLeave } from "./userLeave.model";
 
 interface LeaveRequestAttributes {
   id: number;
@@ -13,7 +12,7 @@ interface LeaveRequestAttributes {
   leaveType: "First half" | "Second half" | "Full day";
   reason: string;
   status: "Pending" | "Approved" | "Rejected";
-  roleId: number;
+  roleId: number; 
 }
 
 interface LeaveRequestCreationAttributes extends Optional<LeaveRequestAttributes, "id"> {}
@@ -28,9 +27,6 @@ class LeaveRequest extends Model<LeaveRequestAttributes, LeaveRequestCreationAtt
   public reason!: string;
   public status!: "Pending" | "Approved" | "Rejected";
   public roleId!: number;
-
-  // public readonly createdAt!: Date;
-  // public readonly updatedAt!: Date;
 }
 
 LeaveRequest.init(
@@ -92,9 +88,6 @@ LeaveRequest.belongsTo(User, {
   foreignKey: "requestToId",
   as: "requestedTo",
 });
-
-
-// LeaveRequest.belongsTo(UserLeave, { foreignKey: 'userId' }); 
 
 LeaveRequest.belongsTo(UserLeave, {
   onDelete: "CASCADE",

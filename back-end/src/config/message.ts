@@ -59,6 +59,7 @@ const userMassage = {
       "The OTP has not been sent successfully.please wait for some time.",
     userLeave: "User leave not created successfully.",
     mail: "The email was not sent successfully.",
+    sendOtp: "Please send otp again",
     leaveApproval: "Leave not approved successfully",
     leaveReject: "Leave not rejected successfully",
     userLeaveRec: "User leave not recorded successfully",

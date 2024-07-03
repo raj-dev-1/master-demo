@@ -10,12 +10,20 @@ import { pagination, role } from "../config/variables";
 import { Op } from "sequelize";
 import { sendLeaveUpdate } from "../utils/sendLeaveUpdate";
 import moment from "moment";
-import { createLeaveService, getCountLeaveService, getuserLeaveService } from "../services/leave.service";
+import {
+  checkUserLeaveService,
+  createLeaveService,
+  fetchUserLeaveBalance,
+  getCountLeaveService,
+  getuserLeaveService,
+  UpdateUserLeaveRequest,
+  userLeavefindAllSevice,
+} from "../services/leave.service";
 
 const leaveStatus = async (req: Request | any, res: Response) => {
   try {
     const userId = req.user.id;
-    const query : any = {
+    const query: any = {
       where: { userId },
       attributes: { exclude: ["updatedAt"] },
       order: [["createdAt", "DESC"]],
@@ -26,7 +34,7 @@ const leaveStatus = async (req: Request | any, res: Response) => {
           attributes: ["name", "email"],
         },
       ],
-    }
+    };
 
     const leaveStatus = await getuserLeaveService(query);
 
@@ -43,9 +51,10 @@ const applyLeave = async (req: Request | any, res: Response) => {
   try {
     const userId = req.user.id;
     const { roleId } = req.user;
-    const query : any = {
+
+    const query: any = {
       where: { userId, status: "Pending" },
-    }
+    };
     const checkLeave = await getCountLeaveService(query);
 
     if (checkLeave.count <= 2) {
@@ -95,11 +104,11 @@ const applyLeave = async (req: Request | any, res: Response) => {
 const leaveBalance = async (req: Request | any, res: Response) => {
   try {
     const userId = req.user.id;
-    const leaveBalance = await UserLeave.findOne({
+    const query: any = {
       where: { userId },
       attributes: { exclude: ["id", "createdAt", "updatedAt"] },
-    });
-
+    };
+    const leaveBalance = await fetchUserLeaveBalance(query);
     return res
       .status(200)
       .json({ leaveBalance, message: userMassage.success.leaveBalance });
@@ -111,7 +120,7 @@ const leaveBalance = async (req: Request | any, res: Response) => {
 
 const allLeaveStatus = async (req: Request | any, res: Response) => {
   try {
-    const { search, userRole, limit, status, page } = req.query;
+    const { search, userRole, limit, status, page, sort, order: orderDirection } = req.query;
 
     let whereCondition: any = {};
     if (search && search.trim()) {
@@ -145,11 +154,20 @@ const allLeaveStatus = async (req: Request | any, res: Response) => {
         .status(400)
         .json({ message: `There are only ${maxPage} pages` });
     }
-
-    const searchResults = await LeaveRequest.findAll({
+    let order : any = [["createdAt", "DESC"]];
+    // if (sort) {
+    //   order = [[sort, orderDirection === 'desc' ? 'DESC' : 'ASC']];
+    // }
+    if (sort) {
+        const direction =orderDirection;
+        const nestedFields = sort.split(".");
+        order =[ [...nestedFields, direction === "desc" ? "DESC" : "ASC"]];
+    }
+    const query: any = {
       where: whereCondition,
       limit: limitDoc,
       offset: skip,
+      order,
       include: [
         {
           model: UserLeave,
@@ -166,10 +184,14 @@ const allLeaveStatus = async (req: Request | any, res: Response) => {
           attributes: ["id", "name", "email", "roleId"],
         },
       ],
-    });
+    };
+    const leaveStatus = await getuserLeaveService(query);
     return res.status(200).json({
       message: userMassage.success.studentList,
-      searchResults,
+      leaveStatus,
+      totalCount: limitDoc,
+      maxPage,
+      pageCount,
     });
   } catch (error) {
     console.log(error);
@@ -180,7 +202,7 @@ const allLeaveStatus = async (req: Request | any, res: Response) => {
 const advanceleaveStatus = async (req: Request | any, res: Response) => {
   try {
     const requestToId = req.user.id;
-    const leaveStatus = await LeaveRequest.findAll({
+    const query: any = {
       attributes: {
         include: [
           [
@@ -202,32 +224,8 @@ const advanceleaveStatus = async (req: Request | any, res: Response) => {
           attributes: ["id", "name", "email", "div", "roleId"],
         },
       ],
-    });
-    return res
-      .status(200)
-      .json({ leaveStatus, message: userMassage.success.leaveStatus });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: userMassage.error.genericError });
-  }
-};
-
-const userLeaveStatus = async (req: Request | any, res: Response) => {
-  try {
-    const userId = req.user.id;
-
-    const leaveStatus = await LeaveRequest.findAll({
-      where: { userId },
-      attributes: { exclude: ["updatedAt"] },
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: User,
-          as: "requestedTo",
-          attributes: ["name", "email"],
-        },
-      ],
-    });
+    };
+    const leaveStatus = await getuserLeaveService(query);
     return res
       .status(200)
       .json({ leaveStatus, message: userMassage.success.leaveStatus });
@@ -239,44 +237,52 @@ const userLeaveStatus = async (req: Request | any, res: Response) => {
 
 const leaveApproval = async (req: Request | any, res: Response) => {
   try {
-    const id = req.params.id;
+    const id: number = req.params.id;
     const statusData = req.body.status;
     const loginUser = req.user.id;
-    const checkLeaveStatus: any = await LeaveRequest.findOne({ where: { id } });
+
+    const checkLeaveStatus: any = await checkUserLeaveService({
+      where: { id },
+    });
+
     const { status, requestToId, startDate, leaveType, endDate, userId } =
       checkLeaveStatus;
-    if (requestToId != loginUser)
+
+    if (requestToId !== loginUser && req.user.dataValues.roleId !== 1) {
       return res.status(400).json({
         message: userMassage.error.leaveStatusError,
       });
+    }
 
-    if (status != "Pending")
+    if (status !== "Pending") {
       return res.status(400).json({ message: userMassage.error.leaveStatus });
+    }
 
-    const LeaveApproval = await LeaveRequest.update(
+    const leaveApproval = await UpdateUserLeaveRequest(
       { status: statusData },
-      { where: { id }, returning: true }
+      id
     );
-    console.log(leaveType);
 
-    if (statusData == "Approved") {
-      if (!LeaveApproval)
+    if (statusData === "Approved") {
+      if (!leaveApproval) {
         return res
           .status(400)
           .json({ message: userMassage.error.leaveApproval });
+      }
+
       const start = moment(startDate, "YYYY-MM-DD");
       const end = moment(endDate, "YYYY-MM-DD");
       let leaveDays: number;
-      if (leaveType == "First half" || leaveType == "Second half") {
+
+      if (leaveType === "First half" || leaveType === "Second half") {
         leaveDays = start.isSame(end, "day")
           ? 0.5
           : end.diff(start, "days") / 2;
       } else {
-        leaveDays = start.isSame(end, "day")
-          ? 0.5
-          : end.diff(start, "days") + 1;
+        leaveDays = start.isSame(end, "day") ? 1 : end.diff(start, "days") + 1;
       }
-      const leaveData: any = await UserLeave.findOne({ where: { userId } });
+
+      const leaveData: any = await fetchUserLeaveBalance({ where: { userId } });
       const availableLeave = leaveData.availableLeave - leaveDays;
       const usedLeave = Number(leaveData.usedLeave) + Number(leaveDays);
       const remainingDays = leaveData.totalWorkingDays - usedLeave;
@@ -290,13 +296,16 @@ const leaveApproval = async (req: Request | any, res: Response) => {
         usedLeave,
         attendancePercentage,
       };
+
       const updateLeave = await UserLeave.update(updateLeaveDetails, {
         where: { userId },
       });
 
       let userError = "";
 
-      if (!updateLeave) userError += userMassage.error.userLeaveRec;
+      if (!updateLeave) {
+        userError += userMassage.error.userLeaveRec;
+      }
 
       const emailDetails = {
         userId,
@@ -307,15 +316,19 @@ const leaveApproval = async (req: Request | any, res: Response) => {
       };
 
       const sendMail = await sendLeaveUpdate(emailDetails);
-      if (!sendMail.valid) userError += userMassage.error.mail;
+      if (!sendMail.valid) {
+        userError += userMassage.error.mail;
+      }
 
       return res.status(200).json({
         message: userMassage.success.leaveApproval,
         userError,
       });
     } else {
-      if (!LeaveApproval)
+      if (!leaveApproval) {
         return res.status(400).json({ message: userMassage.error.leaveReject });
+      }
+
       const emailDetails = {
         userId,
         startDate,
@@ -325,10 +338,11 @@ const leaveApproval = async (req: Request | any, res: Response) => {
       };
 
       const sendMail: any = await sendLeaveUpdate(emailDetails);
-      if (sendMail.valid)
+      if (sendMail.valid) {
         return res
           .status(201)
           .json({ message: userMassage.success.leaveUpdate });
+      }
 
       return res.status(200).json({
         message: userMassage.success.leaveReject,
@@ -342,40 +356,41 @@ const leaveApproval = async (req: Request | any, res: Response) => {
 };
 
 const leaveReport = async (req: Request, res: Response) => {
-    try {
-      const { page, limit } = req.query;
-      const pageCount: any = page || pagination.pageCount;
-      const limitDoc: any = limit || pagination.limitDoc;
-      const totalLeave: any = await UserLeave.count({});
-      const maxPage: any =
-        totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
-      if (pageCount > maxPage)
-        return res
-          .status(404)
-          .json({ message: `There are only ${maxPage} page` });
-      const skip = (pageCount - 1) * limitDoc;
-      const leaveReport = await UserLeave.findAll({
-        attributes: {
-          exclude: ["id", "academicYear", "createdAt", "updatedAt"],
-        },
-        order: [["usedLeave", "DESC"]],
-        include: [
-          {
-            model: User,
-            attributes: ["name", "email", "roleId"],
-          },
-        ],
-        offset: skip,
-        limit: limitDoc,
-      });
+  try {
+    const { page, limit } = req.query;
+    const pageCount: any = page || pagination.pageCount;
+    const limitDoc: any = limit || pagination.limitDoc;
+    const totalLeave: any = await UserLeave.count({});
+    const maxPage: any =
+      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+    if (pageCount > maxPage)
       return res
-        .status(200)
-        .json({ leaveReport, message: userMassage.success.studentList });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: userMassage.error.genericError });
-    }
-  };
+        .status(404)
+        .json({ message: `There are only ${maxPage} page` });
+    const skip = (pageCount - 1) * limitDoc;
+    const query: any = {
+      attributes: {
+        exclude: ["id", "academicYear", "createdAt", "updatedAt"],
+      },
+      order: [["usedLeave", "DESC"]],
+      include: [
+        {
+          model: User,
+          attributes: ["name", "email", "roleId"],
+        },
+      ],
+      offset: skip,
+      limit: limitDoc,
+    };
+    const leaveReport = await userLeavefindAllSevice(query);
+    return res
+      .status(200)
+      .json({ leaveReport, message: userMassage.success.studentList });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
 
 export {
   leaveStatus,
@@ -383,7 +398,6 @@ export {
   leaveBalance,
   advanceleaveStatus,
   allLeaveStatus,
-  userLeaveStatus,
   leaveApproval,
-  leaveReport
+  leaveReport,
 };

@@ -40,6 +40,6 @@ export const leaveDetails = {
 };
 
 export const pagination = {
-  limitDoc: 10,
+  limitDoc: 2,
   pageCount: 1,
 };

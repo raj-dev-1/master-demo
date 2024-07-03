@@ -9,11 +9,14 @@ import bcrypt from "bcryptjs";
 import { setLeaveFaculty, setLeaveHod } from "../services/leave.service";
 import { sendMail } from "../utils/sendMail";
 import { getPaginationParams, getSearchResults } from "../utils/pagination";
+import { Order } from "sequelize";
 
 interface PageQuery {
   page?: string;
   search?: string;
   limit?: string;
+  sort?:string;
+  order?:string;
 }
 
 const profile = async (req: Request | any, res: Response) => {
@@ -48,16 +51,20 @@ const editUser = async (req: Request | any, res: Response) => {
     }
 
     if (req.file) {
+     try {
       const parsedUrl = new URL(userImage);
       const imagePath = parsedUrl.pathname;
       const fullPath = path.join(__dirname, "..", imagePath);
       await unlinkSync(fullPath);
-
+     } catch (error) {
+        console.log("imag error",error);
+     }
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       req.body.image = baseUrl + imgPath + "/" + req.file.filename;
     }
 
     const { name, email, gender, grNumber, phone, address, image, div } = req.body;
+
     const updatedUser = {
       name,
       email,
@@ -102,16 +109,12 @@ const removeUser = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const deleteImage: any = await User.findByPk(id);
-    // if (!deleteImage)
-    //     return res.status(400).json({
-    //       message: userMassage.error.invalidEmail,
-    //     });
-    const { image } = deleteImage;
-    const parsedUrl = new URL(image);
-    const imagePath = parsedUrl.pathname;
-    const fullPath = path.join(__dirname, "..", imagePath);
-
+    
     try {
+      const { image } = deleteImage;
+      const parsedUrl = new URL(image);
+      const imagePath = parsedUrl.pathname;
+      const fullPath = path.join(__dirname, "..", imagePath);
       await unlinkSync(fullPath);
     } catch (error: any) {
       console.log(error);
@@ -219,19 +222,10 @@ const registerHod = async (req: Request, res: Response) => {
 
 const facultyList = async (req: Request | any, res: Response) => {
   try {
-    const { page, search, limit }: PageQuery = req.query;
-    console.log("Received limit:", limit);
+    const { page, search, limit, sort, order: orderDirection }: PageQuery = req.query;
 
     const roleId = role.faculty;
     const whereCondition = { roleId };
-
-    if (search && search.trim()) {
-      const searchResults = await getSearchResults(User, ['name','address'], whereCondition, { search });
-      return res.status(200).json({
-        message: userMassage.success.studentList,
-        searchResults,
-      });
-    }
 
     const { skip, limit: limitDoc, pageCount, maxPage } = await getPaginationParams(User, whereCondition, { page, limit });
 
@@ -239,16 +233,38 @@ const facultyList = async (req: Request | any, res: Response) => {
       return res.status(400).json({ message: `There are only ${maxPage} pages` });
     }
 
-    const facultyList = await User.findAll({
+    let order : Order = [["createdAt", "DESC"]];
+    if (sort) {
+      order = [[sort, orderDirection === 'desc' ? 'DESC' : 'ASC']];
+    }
+
+    if (search && search.trim()) {
+      const { results, totalCount, totalPages, currentPage } = await getSearchResults(User, ['name', 'email'], whereCondition, { search, page, limit });
+
+      return res.status(200).json({
+        message: userMassage.success.studentList,
+        dataList: results,
+        totalCount,
+        maxPage: totalPages,
+        pageCount: currentPage,
+      });
+    }
+
+    const dataList = await User.findAll({
       where: { roleId },
       offset: skip,
       limit: limitDoc,
+      order,
     });
 
     return res.status(200).json({
       message: userMassage.success.studentList,
-      facultyList,
+      dataList,
+      totalCount: limitDoc,
+      maxPage,
+      pageCount,
     });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: userMassage.error.genericError });
@@ -310,33 +326,49 @@ const editHod = async (req: Request, res: Response) => {
 
 const hodList = async (req: Request | any, res: Response) => {
   try {
-    const { page, search, limit }: PageQuery = req.query;
+    const { page, search, limit, sort, order: orderDirection } : PageQuery = req.query;
+
     const roleId = role.hod;
     const whereCondition = { roleId };
-    if (search && search.trim()) {
-      const searchResults = await getSearchResults(User, ['name','address'], whereCondition, { search });
-      return res.status(200).json({
-        message: userMassage.success.studentList,
-        searchResults,
-      });
-    }
 
-    const { skip, limit: limitDoc, pageCount, maxPage } = await getPaginationParams(User,whereCondition, { page, limit });
+    const { skip, limit: limitDoc, pageCount, maxPage } = await getPaginationParams(User, whereCondition, { page, limit });
 
     if (pageCount > maxPage) {
       return res.status(400).json({ message: `There are only ${maxPage} pages` });
     }
 
-    const hodList = await User.findAll({
+    let order : Order = [["createdAt", "DESC"]];
+    if (sort) {
+      order = [[sort, orderDirection === 'desc' ? 'DESC' : 'ASC']];
+    }
+
+    if (search && search.trim()) {
+      const { results, totalCount, totalPages, currentPage } = await getSearchResults(User, ['name', 'email'], whereCondition, { search, page, limit });
+
+      return res.status(200).json({
+        message: userMassage.success.studentList,
+        facultyList: results,
+        totalCount,
+        maxPage: totalPages,
+        pageCount: currentPage,
+      });
+    }
+
+    const dataList = await User.findAll({
       where: { roleId },
       offset: skip,
       limit: limitDoc,
+      order,
     });
 
     return res.status(200).json({
       message: userMassage.success.studentList,
-      hodList,
+      dataList,
+      totalCount: limitDoc,
+      maxPage,
+      pageCount,
     });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: userMassage.error.genericError });
@@ -345,16 +377,10 @@ const hodList = async (req: Request | any, res: Response) => {
 
 const studentList = async (req: Request | any, res: Response) => {
   try {
-    const { page, search, limit }: PageQuery = req.query;
+    const { page, search, limit, sort, order: orderDirection }: PageQuery = req.query;
+
     const roleId = role.student;
     const whereCondition = { roleId };
-    if (search && search.trim()) {
-      const searchResults = await getSearchResults(User, ['name','address'], whereCondition, { search });
-      return res.status(200).json({
-        message: userMassage.success.studentList,
-        searchResults,
-      });
-    }
 
     const { skip, limit: limitDoc, pageCount, maxPage } = await getPaginationParams(User, whereCondition, { page, limit });
 
@@ -362,16 +388,38 @@ const studentList = async (req: Request | any, res: Response) => {
       return res.status(400).json({ message: `There are only ${maxPage} pages` });
     }
 
-    const studentList = await User.findAll({
+    let order : Order = [["createdAt", "DESC"]];
+    if (sort) {
+      order = [[sort, orderDirection === 'desc' ? 'DESC' : 'ASC']];
+    }
+
+    if (search && search.trim()) {
+      const { results, totalCount, totalPages, currentPage } = await getSearchResults(User, ['name', 'email'], whereCondition, { search, page, limit });
+
+      return res.status(200).json({
+        message: userMassage.success.studentList,
+        dataList: results,
+        totalCount,
+        maxPage: totalPages,
+        pageCount: currentPage,
+      });
+    }
+
+    const dataList = await User.findAll({
       where: { roleId },
       offset: skip,
       limit: limitDoc,
+      order,
     });
 
     return res.status(200).json({
       message: userMassage.success.studentList,
-      studentList,
+      dataList,
+      totalCount: limitDoc,
+      maxPage,
+      pageCount,
     });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: userMassage.error.genericError });
@@ -382,11 +430,19 @@ const editStudent = async (req: Request | any, res: Response) => {
   try {
     const { id } = req.params;
     const studentDetails: any = await User.findByPk(id);
+    if (!studentDetails) {
+      return res.status(404).json({
+        message: 'User not found',
+      });
+    }
+
     const { image, email } = studentDetails;
-    if (studentDetails.roleId != role.student)
+    if (studentDetails.roleId != role.student) {
       return res.status(400).json({
         message: userMassage.error.studentUpdateRole,
       });
+    }
+
     if (req.body.email) {
       if (email != req.body.email) {
         const findUser = await checkUser(req.body.email);
@@ -414,10 +470,11 @@ const editStudent = async (req: Request | any, res: Response) => {
       where: { id },
     });
 
-    if (!editUser)
+    if (!editUser[0]) { // Check if the update affected any rows
       return res.status(400).json({
         message: userMassage.error.update,
       });
+    }
 
     return res.status(200).json({
       message: userMassage.success.update,
@@ -438,7 +495,6 @@ const registerFaculty = async (req: Request | any, res: Response) => {
       return res.status(400).json({ message: userMassage.error.fillDetails });
 
     const { error, value } = validateData(req.body);
-// 
     if (error) {
       if (req.file) await deleteFile(req.file);
       return res.status(400).json({ error: error.details[0].message });

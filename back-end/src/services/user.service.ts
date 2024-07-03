@@ -1,10 +1,5 @@
-import { Condition } from "../controllers/auth.controller";
+import { Query } from "../controllers/auth.controller";
 import { User } from "../models/user.model";
-
-// interface UserInstance {
-//   id: number;
-//   // Add any other properties if necessary
-// }
 
 const checkUser = async (email: string): Promise<any | false> => {
   try {
@@ -24,13 +19,23 @@ const findUserId = async (email: string): Promise<any | number> => {
   }
 };
 
-const updateUserService = async (updatePassword : any,conditon: Condition): Promise<any | number> => {
+const updateUserService = async (updatePassword : any,query: Query): Promise<any | number> => {
   try {
-    const result: any = await User.update(updatePassword,conditon);
+    const result: any = await User.update(updatePassword,query);
     return result;
   } catch (error) {
     console.log(error);
   }
 };
 
-export { checkUser, findUserId, updateUserService };
+const createUserService = async (data:any): Promise<any | number> => {
+  try {
+    const result: any = await User.create(data);
+    return result;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+export { checkUser, findUserId,createUserService, updateUserService };

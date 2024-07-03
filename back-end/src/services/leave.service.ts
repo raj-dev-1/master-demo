@@ -55,6 +55,16 @@ const getuserLeaveService = async (query: any) => {
   }
 }
 
+const checkUserLeaveService = async (query: any) => {
+  try {
+    const userLeave = await LeaveRequest.findOne(query);
+    return userLeave;
+  } catch (error) {
+    console.log(error);
+    throw new Error(userMassage.error.genericError);
+  }
+}
+
 const getCountLeaveService = async (query: any) => {
   try {
     const userLeave = await LeaveRequest.findAndCountAll(query);
@@ -74,4 +84,35 @@ const createLeaveService = async (data: any) => {
   }
 }
 
-export { setLeave, setLeaveHod, setLeaveFaculty, getuserLeaveService, getCountLeaveService, createLeaveService };
+const fetchUserLeaveBalance = async (query:any) => {
+  try {
+    const result = await UserLeave.findOne(query);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw new Error(userMassage.error.genericError);
+  }
+}
+
+const UpdateUserLeaveRequest = async ( status: any, id:number ) => {
+  try {
+    const result = await LeaveRequest.update( status ,
+      { where: { id }, returning: true });
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw new Error(userMassage.error.genericError);
+  }
+}
+
+const userLeavefindAllSevice = async (query:any) => {
+  try {
+    const userLeave = await UserLeave.findAll(query);
+    return userLeave;
+  } catch (error) {
+    console.log(error);
+    throw new Error(userMassage.error.genericError);
+  }
+}
+
+export { setLeave, setLeaveHod,userLeavefindAllSevice, setLeaveFaculty, UpdateUserLeaveRequest,checkUserLeaveService , getuserLeaveService, getCountLeaveService, createLeaveService, fetchUserLeaveBalance };

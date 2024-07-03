@@ -1,11 +1,15 @@
 import { Request, Response } from "express";
-import { checkUser, updateUserService } from "../services/user.service";
+import {
+  checkUser,
+  createUserService,
+  updateUserService,
+} from "../services/user.service";
 import { userMassage } from "../config/message";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { role, roleByName } from "../config/variables";
 import { SECRET_KEY } from "../config/constant";
-import { deleteFile, imgPath, User, validateData } from "../models/user.model";
+import { deleteFile, imgPath, validateData } from "../models/user.model";
 import { sendMail } from "../utils/sendMail";
 import { setLeave } from "../services/leave.service";
 import {
@@ -109,7 +113,7 @@ const register = async (req: Request | any, res: Response) => {
       roleId: role.student,
     };
 
-    const user: any = await User.create(newUser);
+    const user: any = await createUserService(newUser);
 
     if (!user)
       return res.status(400).json({ message: userMassage.error.signUpError });
@@ -147,6 +151,7 @@ const logout = async (req: Request, res: Response) => {
     res.clearCookie("jwt");
     return res.status(200).json({ message: userMassage.success.logout });
   } catch (error) {
+    console.log(error);
     return res.status(501).json({ message: userMassage.error.genericError });
   }
 };
@@ -157,30 +162,43 @@ const forgetPassword = async (req: Request | any, res: Response) => {
       return res.status(400).json({ message: userMassage.error.fillDetails });
     }
 
-    const { email } = req.body;
+    const { email } = req.body as RequestBody;
+
+    const findExistingOtp = await getOtp({ where: { email } });
+    if (findExistingOtp) {
+      await deleteExpiredOTP();
+      return res.status(400).json({ message: userMassage.error.otpTime });
+    }
 
     const findUser = await checkUser(email);
-
     if (!findUser) {
       return res.status(404).json({ message: userMassage.error.userNotFound });
     }
 
-    const otp: number = generateOTP();
-    // const otpDetails = { email, otp };
+    const { id, roleId } = findUser;
+    const otp = generateOTP();
+    const otpDetails = {
+      userId: id,
+      email,
+      otp,
+      roleId,
+    };
 
-    const createOtp = await createOtpService({ email, otp });
-
-    if (!createOtp) {
+    const createNewOtp = await createOtpService(otpDetails);
+    if (!createNewOtp) {
       return res.status(400).json({ message: userMassage.error.otp });
     }
 
-    const sendOtpEmail = await sendOtpMail({ email, otp });
+    const sendOtpEmail = await sendOtpMail(otpDetails);
 
-    if (sendOtpEmail.valid) {
+    if (!sendOtpEmail.valid) {
       setTimeout(deleteExpiredOTP, 60 * 3000);
+      return res.status(201).json({ message: userMassage.error.otpTime });
     }
 
+    setTimeout(deleteExpiredOTP, 60 * 3000);
     return res.status(201).json({ message: userMassage.success.otp });
+
   } catch (error: any) {
     if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(400).json({ message: userMassage.error.otpTime });
@@ -191,26 +209,51 @@ const forgetPassword = async (req: Request | any, res: Response) => {
 };
 
 interface RequestBody {
-  email: string;
-  otp: string;
+  email?: string;
+  otp?: string;
+  password?: string;
 }
 
-export interface Condition {
+export interface Query {
   where: {
     email: string;
   };
 }
 
-const verifyOtp = async (req: Request | any, res: Response) => {
+const verifyOtp = async (req: Request | any, res: Response): Promise<any> => {
   try {
     const { email, otp } = req.body as RequestBody;
-    const conditon : Condition = { where: { email } }
-    const findOtp: any = await getOtp(conditon);
-
-    if (findOtp.otp == otp) {
-      return res.status(200).json({ message: userMassage.success.otpVerify });
+    const query: Query = { where: { email } };
+    const findOtp: any = await getOtp(query);
+    if (!findOtp) {
+      return res.status(400).json({ message: userMassage.error.sendOtp });
     }
+    {
+      const { userId, email, roleId } = findOtp;
+      const role: string = roleByName[roleId];
+      const userDetails = {
+        userId,
+        otp,
+        email,
+        role,
+      };
 
+      if (findOtp.otp === otp) {
+        const token: string = await jwt.sign(
+          { userDetails },
+          SECRET_KEY,
+          {
+            expiresIn: "2m",
+          }
+        );
+        res.cookie("jwt", token, { httpOnly: true });
+        console.log(token);
+        return res.status(200).json({
+          message: userMassage.success.otpVerify,
+          token,
+        });
+      }
+    }
     return res.status(400).json({ message: userMassage.error.otpVerify });
   } catch (error) {
     console.log(error);
@@ -220,20 +263,42 @@ const verifyOtp = async (req: Request | any, res: Response) => {
 
 const resetPassword = async (req: Request | any, res: Response) => {
   try {
-    const { email, password } = req.body;
-    const conditon : Condition = { where: { email } }
-    const updatePassword : any = {
+    // Extract token from cookies
+    const token = await req.cookies["jwt"];
+    if (!token) {
+      return res.status(401).json({ message: userMassage.error.tokenMissing });
+    }
+
+    // Verify token
+    const decoded : any = jwt.verify(token, SECRET_KEY);
+    if (!decoded) {
+      return res.status(401).json({ message: userMassage.error.unauthorized });
+    }
+
+    // Extract email from token
+    const { email } = decoded.userDetails;
+
+    // Get new password from request body
+    const { password } = req.body as RequestBody;
+
+    // Update password in the database
+    const query = { where: { email } };
+    const updatePassword = {
       password: await bcrypt.hash(password, 10),
     };
 
-    const updateDetails = await updateUserService(updatePassword,conditon);
+    const updateDetails = await updateUserService(updatePassword, query);
 
-    if (!updateDetails)
+    if (!updateDetails) {
       return res.status(400).json({ message: userMassage.error.update });
+    }
 
     return res.status(200).json({ message: userMassage.success.update });
-  } catch (error) {
+  } catch (error: any) {
     console.log(error);
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: userMassage.error.tokenMissing });
+    }
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };

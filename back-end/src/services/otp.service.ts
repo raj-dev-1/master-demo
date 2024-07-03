@@ -1,10 +1,10 @@
 import { Op } from "sequelize";
 import Otp from "../models/Otp.model";
-import { Condition } from "../controllers/auth.controller";
+import { Query } from "../controllers/auth.controller";
 
 const generateOTP = (): any => {
   try {
-    let digits = "0123456789";
+    let digits = "123456789";
     let OTP = "";
     let len = digits.length;
     for (let i = 0; i < 4; i++) {
@@ -46,9 +46,9 @@ const createOtpService = async (otpDetails: CreateOtpType) => {
     return null;
   }
 }
-const getOtp = async (conditon:Condition) => {
+const getOtp = async (query:Query) => {
   try {
-    const result = await Otp.findOne(conditon);
+    const result = await Otp.findOne(query);
     return result;
   } catch (error) {
     console.error("Error creating OTP:", error);
