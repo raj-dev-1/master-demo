@@ -7,29 +7,34 @@ const privateRoutes: Record<string, string[]> = {
     "/profile",
     "/leaves",
     "/settings",
+    "/auth/reset-password",
   ],
-  hod: [
+  faculty: [
     "/",
     "/calendar",
     "/profile",
     "/leaves",
     "/settings",
+    "/auth/reset-password",
   ],
-  faculty: ["/dashboard", "/profile", "/manager"],
   admin: [
   "/",
+  "/onboard/faculty",
   "/calendar",
   "/profile",
   "/leaves",
   "/settings",
+  "/auth/reset-password",
   ]
 };
 const publicRoutes = [
   "/user/login",
   "/user/register",
-  "/user/forgetPassword",
-  "/user/verifyOtp",
-  "/user/resetPassword",
+  "/auth/forgetPassword",
+  "/auth/verifyOtp",
+  "/auth/resetPassword",
+  "/auth/forget-password",
+  "/auth/verifyOpt",
 ];
 
 export default async function middleware(req: NextRequest) {
@@ -52,9 +57,9 @@ export default async function middleware(req: NextRequest) {
     try {
       const secretKey = process.env.SECRETKEY;
       if (!secretKey) throw new Error("Secret key is not defined");
-
-      const payload = await verifyToken(token, secretKey);
-      const role = payload.userDetails.role;
+      
+      const payload : any = await verifyToken(token, secretKey);
+      const role = payload.userDetails.role || payload.data.role ;
 
       const userPrivateRoutes = privateRoutes[role] || [];
       const nextUrlPath = req.nextUrl.pathname;

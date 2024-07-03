@@ -1,19 +1,15 @@
 "use client";
-import React, { useEffect, useState } from "react";
-// import ChartOne from "../Charts/ChartOne";
-// import ChartThree from "../Charts/ChartThree";
-// import ChartTwo from "../Charts/ChartTwo";
-// import ChatCard from "../Chat/ChatCard";
-// import TableOne from "../Tables/TableOne";
+import React from "react";
 import CardDataStats from "../CardDataStats";
-// import MapOne from "../Maps/MapOne";
-import TableThree from "../Tables/TableThree";
 import { useUserContext } from "@/context/UserContext";
 import { UserFetcher } from "../UserFetcher/UserFetcher";
 import { PiStudentLight } from "react-icons/pi";
-import { RiUserSettingsFill } from "react-icons/ri";
 import { GiTeacher } from "react-icons/gi";
-import TableOne from "../Tables/TableOne"; 
+import LeaveReport from "../Tables/LeaveReport";
+import AllUser from "../Tables/AllUser";
+import LeaveRequest from "../Tables/LeaveRequest";
+import LeaveHistory from "../Tables/LeaveHistory";
+import StudentLeaveRequest from "../Tables/StudentLeaveRequest";
 
 const ECommerce: React.FC = () => {
   const [user, setUser] = useUserContext();
@@ -26,11 +22,6 @@ const ECommerce: React.FC = () => {
             <PiStudentLight className="h-5 w-5 fill-primary dark:fill-white" />
           </CardDataStats>
         ) : null}
-        {user?.profile?.user == "hod" || user?.profile?.user == "admin" ? (
-          <CardDataStats title="Hod" total="12 Leaves" rate="4.35%" levelUp>
-            <RiUserSettingsFill className="h-5 w-5 fill-primary dark:fill-white" />
-          </CardDataStats>
-        ) : null}
         {user?.profile?.user == "faculty" || user?.profile?.user == "admin" ? (
           <CardDataStats title="faculty" total="15 Leaves" rate="2.59%" levelUp>
             <GiTeacher className="h-5 w-5 fill-primary dark:fill-white" />
@@ -38,28 +29,36 @@ const ECommerce: React.FC = () => {
         ) : null}
       </div>
 
-      {/* <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
-        <ChartOne />
-        <ChartTwo />
-        <ChartThree />
-        <MapOne />
-        <ChatCard />
-      </div> */}
-
-      {user?.profile?.user != "admin" && user?.profile?.roleId != 1 && (
-        <div className="boxrounded-sm mt-6 border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-          <h4 className="mb-3 text-title-sm2 font-bold">Leave Request</h4>
-          <TableThree />
+      {user?.profile?.user == "admin" && (
+        <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
+          <LeaveReport />
         </div>
       )}
-      {
-        user?.profile?.user!= "student" && user?.profile?.roleId!= 4 && (
-          <div className="boxrounded-sm mt-6 border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-            <h4 className="mb-3 text-title-sm2 font-bold">Leave Request</h4>
-            <TableOne />
-          </div>
-        )
-      }
+
+      {user?.profile?.user == "student" && user?.profile?.roleId == 4 && (
+        <div className="boxrounded-sm mt-6 border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+          <h4 className="mb-3 text-title-sm2 font-bold">Leave Request</h4>
+          <LeaveHistory />
+        </div>
+      )}
+      {user?.profile?.user == "admin" && (
+        <div className="boxrounded-sm mt-6 border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+          <h4 className="mb-3 text-title-sm2 font-bold">All User</h4>
+          <AllUser />
+        </div>
+      )}
+      {user?.profile?.user == "admin" && (
+        <div className="boxrounded-sm mt-6 border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+          <h4 className="mb-3 text-title-sm2 font-bold">All Leave Request</h4>
+          <LeaveRequest />
+        </div>
+      )}
+      {user?.profile?.user == "faculty" && (
+        <div className="boxrounded-sm mt-6 border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+          <h4 className="mb-3 text-title-sm2 font-bold">Requested Student Leave</h4>
+          <StudentLeaveRequest />
+        </div>
+      )}
     </>
   );
 };

@@ -9,8 +9,8 @@ export function UserFetcher() {
 
   const getApi = async () => {
     try {
-      const result = await getApiCall("/user/profile");
-      setUser(result.data);
+      const {image, ...remainData} = await getApiCall("/user/profile");
+      setUser(remainData?.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
     }

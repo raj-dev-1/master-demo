@@ -4,7 +4,7 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useUserContext } from "@/context/UserContext";
 
 import { useEffect, useState } from "react";
-import { getApiCall } from "@/utils/apicall";
+import { getApiCall, postApiCall } from "@/utils/apicall";
 import DatePickerOne from "@/components/FormElements/DatePicker/DatePickerOne";
 import { useFormik } from "formik";
 import { ApplyFormValues } from "@/types/form";
@@ -12,6 +12,7 @@ import { applyValidation } from "@/validations/loginValidation";
 import { toast } from "react-toastify";
 import { leaveDay } from "@/utils/dropdownData";
 import CustomSelect2 from "@/components/SelectGroup/SelectGroupTwo";
+import { useRouter } from "next/navigation";
 
 interface LeaveBalanceData {
   userId: number;
@@ -25,7 +26,7 @@ interface LeaveBalanceData {
 
 const Leaves: React.FC = () => {
   const [user] = useUserContext();
-  const [facultyList,setFacultyList] = useState<any>(null);
+  const [dataList,setDataList] = useState<any>(null);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceData>({
     userId: 0,
     totalLeave: "",
@@ -35,7 +36,7 @@ const Leaves: React.FC = () => {
     totalWorkingDays: "",
     attendancePercentage: "",
   });
-
+  const router = useRouter();
   const InitialValues: ApplyFormValues = {
     startDate: "",
     endDate: "",
@@ -60,16 +61,11 @@ const Leaves: React.FC = () => {
   
   const getApi = async () => {
     try {
-      let leaveBalanceResult: any ;
-      if (user.profile.user == "student" ||user.profile.roleId == 4) {
-         leaveBalanceResult = await getApiCall("/user/leaveBalance");
-        } else {
-        leaveBalanceResult = await getApiCall("/manage/leaveBalance");
-      }
-      const facultyListData = await getApiCall("/manage/facultyList");
-      setFacultyList(facultyListData?.data?.facultyList);
+      let leaveBalanceResult: any = await getApiCall("/leave/leaveBalance");
+      let facultyListData: any = await getApiCall("/user/facultyList");
+        console.log(facultyListData);
+      setDataList(facultyListData?.data?.dataList);
       setLeaveBalance(leaveBalanceResult.data.leaveBalance);
-      // Fetch leave balance data
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -83,6 +79,8 @@ const Leaves: React.FC = () => {
 
   useEffect(() => {
     setDateDifference(calculateDateDifference(date1, date2));
+    setFieldValue("startDate",date1)
+    setFieldValue("endDate",date2)
   }, [date1, date2]);
 
   const {
@@ -98,37 +96,23 @@ const Leaves: React.FC = () => {
     initialValues: InitialValues,
     validationSchema: applyValidation,
     onSubmit: (values) => {
-      console.log(values);
-      // setApplyLeave();
+      setApplyLeave();
     },
   });
-  console.log("values",values);
-  // const setApplyLeave = async () => {
-  //   try {
-  //     let result : any;
-  //     console.log(result);
-  //     if(user.profile.user == "student" || user.profile.userId == 4){
-  //       result = await putApiCall("/user/editUser", values);
-  //     } else {
-  //       result = await putApiCall("/manage/editUser", values);
-  //     }
-  //     if (result?.status === 200) {
-  //       const updatedUser = result.data.user;
-  //       const { message } = result.data;
-  //       setUser((prevUser: any) => ({
-  //         ...prevUser,
-  //         message,
-  //         profile: {
-  //           ...updatedUser,
-  //         },
-  //       }));
-  //       toast.success(message || "Profile updated successfully");
-  //     }
-  //   } catch (error : any) {
-  //     console.error("Error updating user profile:", error);
-  //     toast.error(error.response?.data?.message || error.message || "An error occurred while updating the profile");
-  //   }
-  // };
+  
+  const setApplyLeave = async () => {
+    try {
+      let result : any = await postApiCall("/leave/applyLeave", values);
+      if (result?.status === 201) {
+        const { message } = result.data;
+        router.push('/'); 
+        toast.success(message || "Leave Applied successfully");
+      }
+    } catch (error : any) {
+      console.error("Error updating user profile:", error);
+      toast.error(error.response?.data?.message || error.message || "An error occurred while updating the profile");
+    }
+  };
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-full">
@@ -142,17 +126,20 @@ const Leaves: React.FC = () => {
                 </h3>
               </div>
               <div className="p-7">
-                <form action="#">
+                <form onSubmit={handleSubmit}>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                     <div className="w-full sm:w-1/2">
-                      <CustomSelect2 
+                      <CustomSelect2
                         errors={errors.requestToId}
                         touched={touched.requestToId}
                         values={values.requestToId}
                         name="requestToId"
                         setformik={setFieldValue}
-                        option={facultyList}
+                        option={dataList}
                       />
+                      {errors.requestToId && touched.requestToId ? (
+                        <div className="text-red-500">{errors.requestToId}</div>
+                      ) : null}
                     </div>
 
                     <div className="w-full sm:w-1/2">
@@ -170,10 +157,24 @@ const Leaves: React.FC = () => {
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                     <div className="w-full sm:w-1/2">
-                      <DatePickerOne label="From" setdate={date1 ?? undefined}  onDateChange={setDate1} />
+                      <DatePickerOne
+                        label="From"
+                        setdate={date1 ?? undefined}
+                        onDateChange={setDate1}
+                      />
+                      {errors.startDate && touched.startDate ? (
+                        <div className="text-red-500">{errors.startDate}</div>
+                      ) : null}
                     </div>
                     <div className="w-full sm:w-1/2">
-                      <DatePickerOne label="To" setdate={date2 ?? undefined}  onDateChange={setDate2} />
+                      <DatePickerOne
+                        label="To"
+                        setdate={date2 ?? undefined}
+                        onDateChange={setDate2}
+                      />
+                      {errors.endDate && touched.endDate ? (
+                        <div className="text-red-500">{errors.endDate}</div>
+                      ) : null}
                     </div>
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
@@ -182,15 +183,18 @@ const Leaves: React.FC = () => {
                         Number of Days
                       </label>
                       <input
-                        value={dateDifference !== null ? `${dateDifference} days` : "Select both dates"}
+                        value={
+                          dateDifference !== null
+                            ? `${dateDifference} days`
+                            : "Select both dates"
+                        }
                         className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                         type="text"
                         disabled
                       />
                     </div>
                     <div className="w-full sm:w-1/2">
-                      {/* <SelectGroupTwo title="Leave Day" leaveData={leaveDay} icon={<ImExit />}/> */}
-                      <CustomSelect2 
+                      <CustomSelect2
                         errors={errors.leaveType}
                         touched={touched.leaveType}
                         values={values.leaveType}
@@ -198,16 +202,29 @@ const Leaves: React.FC = () => {
                         setformik={setFieldValue}
                         option={leaveDay}
                       />
+                      {errors.leaveType && touched.leaveType ? (
+                        <div className="text-red-500">{errors.leaveType}</div>
+                      ) : null}
                     </div>
                   </div>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
-                  <div className="w-full">
-                    <label className="mb-3 block text-sm font-medium text-black dark:text-white">
+                    <div className="w-full">
+                      <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                         Reason
-                    </label>
-                    <textarea rows={6} placeholder="Write minimum 200 characters " className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary">
-                    </textarea>
-                  </div>
+                      </label>
+                      <textarea
+                        rows={6}
+                        placeholder="Write minimum 200 characters "
+                        name="reason"
+                        className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        value={values.reason}
+                      ></textarea>
+                      {errors.reason && touched.reason ? (
+                        <div className="text-red-500">{errors.reason}</div>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="flex justify-end gap-4.5">
                     <button

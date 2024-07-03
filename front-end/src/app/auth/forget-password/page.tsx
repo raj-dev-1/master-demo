@@ -1,12 +1,10 @@
 "use client";
-
-import React, { useContext } from "react";
+import * as Yup from "yup";
+import React from "react";
 import Link from "next/link";
 import { useFormik } from "formik";
-import { loginValidation } from "@/validations/loginValidation";
-import { LoginFormValues } from "@/types/form";
-import { postApiCall } from "@/utils/apicall";
 import { useRouter } from "next/navigation";
+import { postApiCall } from "@/utils/apicall";
 import { toast } from "react-toastify";
 
 const page = () => {
@@ -14,9 +12,8 @@ const page = () => {
   //   email: "",
   //   password:"",
   // });
-  const InitialValues : LoginFormValues = {
+  const InitialValues : {email: string;} = {
     email: "",
-    password: "",
   };
   const router = useRouter();
   // console.log(user);
@@ -35,18 +32,21 @@ const page = () => {
     resetForm, // Add resetForm from useFormik
   } = useFormik({
     initialValues: InitialValues,
-    validationSchema: loginValidation,
-    onSubmit: async (values) => {
-      const result = await postApiCall("/auth/login", values);
-      if (result?.status == 200) { 
-        // const expirationDate = new Date(); 
-        // expirationDate.setTime(expirationDate.getTime() + (1 * 60 * 60 * 1000)); // 1 hours in milliseconds
-        // Cookies.set('jwt', result.token); 
-        toast.success("Login successful"); 
-        router.push('/'); 
+    validationSchema: Yup.object({
+        email: Yup.string()
+          .email("Please Enter Valid email")
+          .required("Please Enter email"),
+      }),
+    onSubmit: async () => {
+      const result = await postApiCall("/auth/forgetPassword", values);
+      console.log(result);
+      if (result?.status == 201) { 
+        toast.success(result?.data?.message); 
+        localStorage.setItem("email", values.email);
+        router.push('/auth/verifyOpt'); 
         resetForm(); 
       } else { 
-        toast.error(result.message); 
+        toast.error(result?.data?.message); 
       } 
     }, 
   });
@@ -157,7 +157,7 @@ const page = () => {
         <div className="flex items-center justify-center bg-white px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
           <div className="xl:mx-auto xl:w-full xl:max-w-sm 2xl:max-w-md">
             <h2 className="text-center text-3xl font-bold leading-tight text-black sm:text-4xl">
-              Sign in{" "}
+              Forget Password
             </h2>
             <p className="text-gray-600 mt-2 text-center text-base">
               Don’t have an account?{" "}
@@ -215,57 +215,6 @@ const page = () => {
                     ""
                   )}
                 </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor=""
-                      className="text-gray-900 text-base font-medium"
-                    >
-                      {" "}
-                      Password{" "}
-                    </label>
-                    <Link
-                      href="/auth/forget-password"
-                      title=""
-                      className="text-sm font-medium text-blue-600 transition-all duration-200 hover:text-blue-700 hover:underline focus:text-blue-700"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="text-gray-400 focus-within:text-gray-600 relative mt-2.5">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <svg
-                        className="h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"
-                        />
-                      </svg>
-                    </div>
-                    <input
-                      type="password"
-                      value={values.password}
-                      name="password"
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      id=""
-                      placeholder="Enter your password"
-                      className="placeholder-gray-500 border-gray-200 bg-gray-50 block w-full rounded-md border py-4 pl-10 pr-4 text-black caret-blue-600 transition-all duration-200 focus:border-blue-600 focus:bg-white focus:outline-none"
-                    />
-                  </div>
-                    {errors.password && touched.password ? (
-                      <p className="mt-2 text-sm text-danger">{errors.password}</p>
-                    ) : (
-                      ""
-                    )}
-                </div>
 
                 <div>
                   <button
@@ -278,41 +227,6 @@ const page = () => {
               </div>
             </form>
 
-            <div className="mt-3 space-y-3">
-              <button
-                type="button"
-                className="text-gray-700 border-gray-200 hover:bg-gray-100 focus:bg-gray-100 relative inline-flex w-full items-center justify-center rounded-md border-2 bg-white px-4 py-4 text-base font-semibold transition-all duration-200 hover:text-black focus:text-black focus:outline-none"
-              >
-                <div className="absolute inset-y-0 left-0 p-4">
-                  <svg
-                    className="h-6 w-6 text-rose-500"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
-                  </svg>
-                </div>
-                Sign in with Google
-              </button>
-
-              <button
-                type="button"
-                className="text-gray-700 border-gray-200 hover:bg-gray-100 focus:bg-gray-100 relative inline-flex w-full items-center justify-center rounded-md border-2 bg-white px-4 py-4 text-base font-semibold transition-all duration-200 hover:text-black focus:text-black focus:outline-none"
-              >
-                <div className="absolute inset-y-0 left-0 p-4">
-                  <svg
-                    className="h-6 w-6 text-[#2563EB]"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M13.397 20.997v-8.196h2.765l.411-3.209h-3.176V7.548c0-.926.258-1.56 1.587-1.56h1.684V3.127A22.336 22.336 0 0 0 14.201 3c-2.444 0-4.122 1.492-4.122 4.231v2.355H7.332v3.209h2.753v8.202h3.312z"></path>
-                  </svg>
-                </div>
-                Sign in with Facebook
-              </button>
-            </div>
           </div>
         </div>
       </div>

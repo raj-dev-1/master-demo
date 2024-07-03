@@ -22,7 +22,6 @@ const config: Config = {
       colors: {
         current: "currentColor",
         transparent: "transparent",
-        white: "#FFFFFF",
         black: "#1C2434",
         'red-main': "#FB5454",
         "black-2": "#010101",

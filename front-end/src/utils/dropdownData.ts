@@ -12,3 +12,18 @@ export const leaveDay = [
         name:"Full day"
     },
 ]
+
+export const leaveStatus = [
+    {
+        id:"1",
+        name:"Pending"
+    },
+    {
+        id:"2",
+        name:"Rejected"
+    },
+    {
+        id:"3",
+        name:"Approved"
+    }
+];

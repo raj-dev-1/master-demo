@@ -38,15 +38,15 @@ const Settings = () => {
   };
 
   const InitialValues: SettingFormValues = {
-    name: user?.profile.name || "",
-    gender: user?.profile.gender || "",
-    email: user?.profile.email || "",
+    name: user?.profile?.name || "",
+    gender: user?.profile?.gender || "",
+    email: user?.profile?.email || "",
     image: user?.profile?.image || "",
-    phone: user?.profile.phone || "",
-    address: user?.profile.address || "",
-    department: user?.profile.department || "",
-    div: user?.profile.div || "",
-    user: user?.profile.user || "",
+    phone: user?.profile?.phone || "",
+    address: user?.profile?.address || "",
+    department: user?.profile?.department || "",
+    div: user?.profile?.div || "",
+    user: user?.profile?.user || "",
   };
 
   const {
@@ -69,7 +69,6 @@ const Settings = () => {
 
   const setProfile = async () => {
     try {
-      let result: any;
       const formData: any = objectToFormData(values);
       if (fileNew !== null) {
         formData.set("image", fileNew);
@@ -79,11 +78,7 @@ const Settings = () => {
       for (const [key, value] of formData.entries()) {
         console.log(`Key: ${key}, Value: ${value}`);
       }
-      if (user.profile.user == "student" || user.profile.roleId == 4) {
-        result = await putApiCall("/user/editUser", formData);
-      } else {
-        result = await putApiCall("/manage/editUser", formData);
-      }
+      const result: any = await putApiCall("/user/editUser", formData);
       if (result?.status === 200) {
         const updatedUser = result.data.user;
         const { message } = result.data;
@@ -118,9 +113,10 @@ const Settings = () => {
     e.preventDefault();
     try {
       console.log(passwordData);
-      const result = await putApiCall("/user/resetPassword", passwordData);
+      const result = await putApiCall("/auth/resetPassword", passwordData);
       if (result?.status === 200) {
         toast.success(result.data.message || "Password updated successfully");
+        resetForm();
       } else {
         toast.error(
           result.data.message ||
@@ -232,7 +228,7 @@ const Settings = () => {
                         type="email"
                         name="email"
                         id="email"
-                        placeholder="devidjond45@gmail.com"
+                        placeholder="raj@gmail.com"
                         value={values.email}
                         onChange={handleChange}
                         onBlur={handleBlur}
@@ -318,8 +314,7 @@ const Settings = () => {
                       className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
                       type="button"
                       onClick={(e) => {
-                        e.preventDefault(); 
-                        resetForm(); 
+                        e.preventDefault();
                         setFileNew(null);
                       }}
                     >
@@ -366,13 +361,31 @@ const Settings = () => {
                       )}
                       {fileNew === null && (
                         <div className="flex items-center justify-center">
-                          <Image
-                            className="rounded-full object-cover"
-                            src={values.image}
-                            width={60}
-                            height={60}
-                            alt="profile"
-                          />
+                          <span className="h-12 w-12 overflow-hidden rounded-full">
+                            {user?.profile?.image ? (
+                              <Image
+                                width={112}
+                                height={112}
+                                src={values.image}
+                                style={{
+                                  width: "auto",
+                                  height: "auto",
+                                }}
+                                alt="User"
+                              />
+                            ) : (
+                              <Image
+                                width={112}
+                                height={112}
+                                src="/images/user/user-01.png"
+                                style={{
+                                  width: "auto",
+                                  height: "auto",
+                                }}
+                                alt="User"
+                              />
+                            )}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -381,18 +394,18 @@ const Settings = () => {
                         {errors.image}
                       </p>
                     )}
-                    <div>
-                      <span className="mb-1.5 text-black dark:text-white">
+                    <div className="mb-3">
+                      <span className=" text-black dark:text-white">
                         Edit your photo
                       </span>
-                      <span className="flex gap-2.5">
+                      {/* <span className="flex gap-2.5">
                         <button className="text-sm hover:text-primary">
                           Delete
                         </button>
                         <button className="text-sm hover:text-primary">
                           Update
                         </button>
-                      </span>
+                      </span> */}
                     </div>
                   </div>
 
@@ -423,7 +436,7 @@ const Settings = () => {
                   <div className="mb-6 flex justify-end gap-4.5">
                     <button
                       onClick={(e) => {
-                        e.preventDefault(); 
+                        e.preventDefault();
                         setFileNew(null);
                       }}
                       className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
@@ -459,12 +472,13 @@ const Settings = () => {
                         <MdOutlineEmail className="h-5 w-5" />
                       </span>
                       <input
-                        className="w-full rounded border border-stroke bg-gray py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        className="w-full cursor-not-allowed rounded border-[1.5px] border-stroke bg-transparent py-3 pl-11.5 pr-4.5 font-normal text-black outline-none focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary dark:disabled:bg-black"
                         type="email"
                         name="email"
                         placeholder="devidjond45@gmail.com"
                         value={user?.profile?.email}
                         readOnly
+                        disabled
                       />
                     </div>
                   </div>
@@ -509,6 +523,10 @@ const Settings = () => {
                     <button
                       className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
                       type="submit"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFileNew(null);
+                      }}
                     >
                       Cancel
                     </button>

@@ -31,10 +31,11 @@ const page = () => {
     initialValues: InitialValues,
     validationSchema: registerValidation,
     onSubmit: async (values) => {
-      const result = await postApiCall("/auth/register", values);
+      const result = await postApiCall("/user/registerFaculty", values);
+      console.log(result);
       if (result?.status == 201) {
         toast.success("Registration successful");
-        router.push("/user/login");
+        router.push("/");
         resetForm();
       } else {
         toast.error(result.message);
@@ -138,19 +139,9 @@ const page = () => {
         </div>
         <div className="flex items-center justify-center px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
           <div className="xl:mx-auto xl:w-full xl:max-w-sm 2xl:max-w-md">
-            <h2 className="text-2xl font-bold text-center leading-tight text-black sm:text-3xl">
+            <h2 className="text-2xl font-bold text-center leading-tight text-black dark:text-white sm:text-3xl">
               Sign up
             </h2>
-            <p className="mt-2 text-base text-center text-gray-600">
-              Already have an account?{" "}
-              <a
-                href="/user/login"
-                title=""
-                className="font-medium text-blue-600 transition-all duration-200 hover:underline"
-              >
-                Sign In
-              </a>
-            </p>
             <form onSubmit={handleSubmit} className="mt-8">
               <div className="space-y-5">
                 <div className='relative'>

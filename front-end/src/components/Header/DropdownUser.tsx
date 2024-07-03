@@ -1,9 +1,9 @@
-"use client"
+"use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 import { useUserContext } from "@/context/UserContext";
 import { getApiCall } from "@/utils/apicall";
 import { toast } from "react-toastify";
@@ -29,7 +29,7 @@ const DropdownUser = () => {
     };
     document.addEventListener("click", clickHandler);
     return () => document.removeEventListener("click", clickHandler);
-  },[dropdownOpen]);
+  }, [dropdownOpen]);
 
   // close if the esc key is pressed
   useEffect(() => {
@@ -39,22 +39,21 @@ const DropdownUser = () => {
     };
     document.addEventListener("keydown", keyHandler);
     return () => document.removeEventListener("keydown", keyHandler);
-  },[dropdownOpen]);
+  }, [dropdownOpen]);
 
   const handleLogout = async () => {
     try {
-       const result = await getApiCall('/user/logout');
-       if(result.status == 200){
-         toast.success("Logout successful");
-         router.push('/user/login');
-        } else {
-          toast.error("Logout not successful");
-       }
+      const result = await getApiCall("/auth/logout");
+      if (result.status == 200) {
+        router.push("/user/login");
+        toast.success("Logout successful");
+      } else {
+        toast.error("Logout not successful");
+      }
     } catch (error) {
       console.error("Logout error", error);
     }
   };
-  
   return (
     <div className="relative">
       <Link
@@ -69,17 +68,30 @@ const DropdownUser = () => {
           </span>
         </span>
 
-        <span className="h-12 w-12 rounded-full overflow-hidden">
-          <Image
-            width={112}
-            height={112}
-            src={user?.profile?.image}
-            style={{
-              width: "auto",
-              height: "auto",
-            }}
-            alt="User"
-          />
+        <span className="h-12 w-12 overflow-hidden rounded-full">
+          { user?.profile?.image ? (
+            <Image
+              width={112}
+              height={112}
+              src={user.profile.image}
+              style={{
+                width: "auto",
+                height: "auto",
+              }}
+              alt="User"
+            />
+          ) : (
+            <Image
+              width={112}
+              height={112}
+              src="/images/user/user-01.png"
+              style={{
+                width: "auto",
+                height: "auto",
+              }}
+              alt="User"
+            />
+          )}
         </span>
 
         <svg
@@ -181,7 +193,10 @@ const DropdownUser = () => {
             </Link>
           </li>
         </ul>
-        <button onClick={handleLogout} className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+        >
           <svg
             className="fill-current"
             width="22"

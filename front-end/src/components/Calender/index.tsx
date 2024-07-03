@@ -112,14 +112,8 @@ const Calendar = () => {
   const [user, setUser] = useUserContext();
   const getApi = async () => {
     try {
-      let result: any;
-      if (user.profile.user == "student") {
-        result = await getApiCall("/user/leaveStatus");
+      let result: any = await getApiCall("/leave/leaveStatus");
         setLeaveData(result.data.leaveStatus);
-      } else {
-        result = await getApiCall("/manage/userLeaveStatus");
-        setLeaveData(result.data.leaveStatus);
-      }
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -132,8 +126,6 @@ const Calendar = () => {
     }
     // setLeaveData(data);
   }, [user]);
-
-  console.log("calnders", leaveData);
 
   const nextMonth = () => {
     setCurrentDate(addMonths(currentDate, 1));

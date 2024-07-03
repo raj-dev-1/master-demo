@@ -36,10 +36,14 @@ const CustomSelect2: React.FC<CustomSelect2Props> = ({ option, errors, touched, 
     setIsOpen(!isOpen);
   };
 
-  let result : any= option?.find((opt) => opt.id === values);
-
+  let result : any;
+  if(name == "requestToId"){
+    result = option?.find((opt) => opt.id == values);
+  } else {
+    result = option?.find((opt) => opt.name == values);
+  }
   return (
-    <div className={`${errors && touched ? "red" : ""} ${!values ? "placeholder" : ""} dropdown`} ref={refOne}>
+    <div className={`${!values ? "placeholder" : ""} dropdown`} ref={refOne}>
        <label className="mb-3 block text-sm font-medium text-black dark:text-white">Apply To </label>
       <div className={isOpen ? "active dropdown-btn" : "dropdown-btn"} onClick={() => {
         toggleDropdown();
@@ -49,7 +53,7 @@ const CustomSelect2: React.FC<CustomSelect2Props> = ({ option, errors, touched, 
       </div>
       {isOpen && (
         <div className="dropdown-content">
-          {option.map((item :any, index) => (
+          {option?.map((item :any, index) => (
             <div key={index} onClick={() => {
               if(name == "requestToId"){
                 setformik(name, item.id);
